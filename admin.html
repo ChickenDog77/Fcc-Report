@@ -217,8 +217,8 @@ async function sendMagicLink() {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({email})
     });
-    const data = await res.json();
-    if (data.success) {
+    // Respond immediately mode returns 200 on success regardless of body
+    if (res.ok) {
       msg.textContent = '\u2713 Magic link sent! Check your email.';
       msg.className = 'login-msg success';
       btn.textContent = 'Link Sent';
