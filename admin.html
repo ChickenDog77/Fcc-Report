@@ -324,7 +324,7 @@ function reportCard(r) {
     ? '<span class="card-badge badge-open">Open</span>'
     : '<span class="card-badge badge-resolved">\u2713 Resolved</span>';
   const footer = r.status === 'open'
-    ? '<button class="resolve-btn" data-id="' + r.id + '" onclick="resolveReport(this.dataset.id)">&#x2713; Mark Resolved</button>'
+    ? '<button class="resolve-btn" id="btn-' + r.id + '" data-id="' + r.id + '" onclick="resolveReport(this.dataset.id)">&#x2713; Mark Resolved</button>'
     : '<span class="resolved-time">Resolved ' + (r.resolved_at ? fmt(r.resolved_at) : '') + '</span>';
   return '<div class="report-card ' + r.status + '" id="card-' + r.id + '">' +
     '<div class="card-header"><div><div class="card-location">' + r.location_name + '</div>' +
@@ -335,13 +335,22 @@ function reportCard(r) {
 
 async function resolveReport(id) {
   const btn = document.getElementById('btn-' + id);
+  if (!btn) { alert('Button error - try refreshing'); return; }
   btn.disabled = true; btn.textContent = 'Resolving...';
   try {
-    await fetch(RESOLVE_URL + '?id=' + id);
-    const r = allReports.find(r => r.id === id);
-    if (r) { r.status = 'resolved'; r.resolved_at = new Date().toISOString(); }
-    updateStats(); renderReports();
-  } catch(err) { btn.disabled = false; btn.textContent = '\u2713 Mark Resolved'; }
+    const res = await fetch(RESOLVE_URL + '?id=' + id);
+    if (res.ok || res.status === 200) {
+      const r = allReports.find(r => r.id === id);
+      if (r) { r.status = 'resolved'; r.resolved_at = new Date().toISOString(); }
+      updateStats(); renderReports();
+    } else {
+      alert('Resolve failed: ' + res.status);
+      btn.disabled = false; btn.textContent = '\u2713 Mark Resolved';
+    }
+  } catch(err) { 
+    alert('Resolve error: ' + err.message);
+    btn.disabled = false; btn.textContent = '\u2713 Mark Resolved'; 
+  }
 }
 
 const QR_LOCS = [
