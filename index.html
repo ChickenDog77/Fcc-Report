@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Report a Need — Farragut Christian Church</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #1a2744;
+    --navy-mid: #243260;
+    --gold: #c9a84c;
+    --gold-light: #f5e9c4;
+    --cream: #faf8f2;
+    --white: #ffffff;
+    --gray: #6b7280;
+    --light: #f3f4f6;
+    --border: #e8e4d9;
+    --green: #2d7a4f;
+    --green-light: #dcf5e7;
+    --red: #c0392b;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--navy);
+  }
+
+  .page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    background: var(--navy);
+    padding: 20px 24px 18px;
+    border-bottom: 3px solid var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .cross {
+    width: 22px; height: 22px;
+    position: relative; flex-shrink: 0;
+  }
+  .cross::before, .cross::after {
+    content: ''; position: absolute;
+    background: var(--gold); border-radius: 2px;
+  }
+  .cross::before { width: 5px; height: 22px; left: 8.5px; top: 0; }
+  .cross::after  { width: 22px; height: 5px; left: 0; top: 8.5px; }
+
+  .header-text h1 {
+    font-family: 'Lora', serif;
+    color: var(--white);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  .header-text p {
+    color: var(--gold);
+    font-size: 0.72rem;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* Main */
+  .main { flex: 1; padding: 24px 20px 32px; }
+
+  .location-banner {
+    background: var(--navy);
+    color: var(--white);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .location-icon {
+    width: 36px; height: 36px;
+    background: rgba(201,168,76,0.2);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .location-banner h2 {
+    font-family: 'Lora', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .location-banner p {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.6);
+    margin-top: 2px;
+  }
+
+  .section-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gray);
+    margin-bottom: 12px;
+  }
+
+  /* Item buttons */
+  .items-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .item-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 15px 18px;
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .item-btn:active { transform: scale(0.98); }
+
+  .item-btn.selected {
+    border-color: var(--navy);
+    background: #f0f3fa;
+  }
+
+  .item-check {
+    width: 24px; height: 24px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    background: var(--white);
+  }
+  .item-btn.selected .item-check {
+    background: var(--navy);
+    border-color: var(--navy);
+  }
+  .item-check svg { display: none; }
+  .item-btn.selected .item-check svg { display: block; }
+
+  .item-label {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--navy);
+    flex: 1;
+  }
+  .item-btn.selected .item-label { font-weight: 500; }
+
+  /* Notes */
+  .notes-wrap { margin-bottom: 28px; }
+  .notes-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    color: var(--navy);
+    background: var(--white);
+    resize: none;
+    outline: none;
+    transition: border-color 0.15s;
+    min-height: 90px;
+  }
+  .notes-input:focus { border-color: var(--navy); }
+  .notes-input::placeholder { color: #b0b8c4; }
+
+  /* Submit */
+  .submit-btn {
+    width: 100%;
+    padding: 17px;
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    border-radius: 14px;
+    font-family: 'Lora', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .submit-btn:active { background: var(--navy-mid); transform: scale(0.99); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .submit-note {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--gray);
+    margin-top: 12px;
+  }
+
+  /* Success screen */
+  .success-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 48px 24px;
+    flex: 1;
+    animation: fadeIn 0.4s ease;
+  }
+  .success-screen.show { display: flex; }
+  .main.hide { display: none; }
+
+  .success-icon {
+    width: 72px; height: 72px;
+    background: var(--green-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+    font-size: 2rem;
+  }
+  .success-screen h2 {
+    font-family: 'Lora', serif;
+    font-size: 1.5rem;
+    color: var(--navy);
+    margin-bottom: 10px;
+  }
+  .success-screen p {
+    color: var(--gray);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 280px;
+  }
+  .success-screen .summary {
+    margin-top: 24px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    width: 100%;
+    text-align: left;
+  }
+  .success-screen .summary h3 {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gray);
+    margin-bottom: 8px;
+  }
+  .success-screen .summary ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .success-screen .summary li {
+    font-size: 0.9rem;
+    color: var(--navy);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .success-screen .summary li::before { content: '✓'; color: var(--green); font-weight: 700; }
+
+  /* Error */
+  .error-msg {
+    display: none;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.88rem;
+    color: var(--red);
+    margin-bottom: 16px;
+  }
+  .error-msg.show { display: block; }
+
+  /* Unknown location */
+  .unknown-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 48px 24px;
+    flex: 1;
+  }
+  .unknown-screen.show { display: flex; }
+  .unknown-screen h2 { font-family: 'Lora', serif; font-size: 1.3rem; margin-bottom: 10px; }
+  .unknown-screen p { color: var(--gray); font-size: 0.9rem; line-height: 1.6; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="header">
+    <div class="cross"></div>
+    <div class="header-text">
+      <h1>Farragut Christian Church</h1>
+      <p>Supply Request</p>
+    </div>
+  </div>
+
+  <!-- Unknown location fallback -->
+  <div class="unknown-screen" id="unknownScreen">
+    <div style="font-size:2.5rem;margin-bottom:16px">🔍</div>
+    <h2>Location Not Found</h2>
+    <p>This QR code doesn't match a known location. Please let a staff member know.</p>
+  </div>
+
+  <!-- Report form -->
+  <div class="main" id="mainForm">
+    <div class="location-banner">
+      <div class="location-icon" id="locIcon">📍</div>
+      <div>
+        <h2 id="locName">Loading...</h2>
+        <p>Tap everything that's needed</p>
+      </div>
+    </div>
+
+    <div class="section-label">What's needed?</div>
+    <div class="items-grid" id="itemsGrid"></div>
+
+    <div class="notes-wrap">
+      <div class="section-label">Anything else?</div>
+      <textarea class="notes-input" id="notesInput" placeholder="Optional — describe any other issue or detail..." rows="3"></textarea>
+    </div>
+
+    <div class="error-msg" id="errorMsg">Something went wrong. Please try again.</div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitReport()">Send Report</button>
+    <p class="submit-note">Dena will be notified right away.</p>
+  </div>
+
+  <!-- Success -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">✓</div>
+    <h2>Thank you!</h2>
+    <p>Your report has been sent. Our team will take care of it as soon as possible.</p>
+    <div class="summary" id="successSummary"></div>
+  </div>
+</div>
+
+<script>
+  // ─── Location data ───────────────────────────────────────────────────────────
+  const LOCATIONS = {
+    "mens-bathroom-foyer": {
+      name: "Men's Bathroom — Foyer Side",
+      icon: "🚻",
+      items: ["Toilet paper", "Hand soap", "Hand towels", "Trash full", "Cleaning needed"]
+    },
+    "womens-bathroom-foyer": {
+      name: "Women's Bathroom — Foyer Side",
+      icon: "🚻",
+      items: ["Toilet paper", "Hand soap", "Hand towels", "Trash full", "Cleaning needed"]
+    },
+    "mens-bathroom-education": {
+      name: "Men's Bathroom — Education Side",
+      icon: "🚻",
+      items: ["Toilet paper", "Hand soap", "Hand towels", "Trash full", "Cleaning needed"]
+    },
+    "womens-bathroom-education": {
+      name: "Women's Bathroom — Education Side",
+      icon: "🚻",
+      items: ["Toilet paper", "Hand soap", "Hand towels", "Trash full", "Cleaning needed"]
+    },
+    "baptistry-bathroom": {
+      name: "Baptistry Bathroom",
+      icon: "🚻",
+      items: ["Toilet paper", "Hand soap", "Hand towels", "Trash full", "Cleaning needed"]
+    },
+    "nursery-preschool-bathroom": {
+      name: "Nursery & Preschool Bathroom",
+      icon: "🍼",
+      items: ["Toilet paper", "Hand soap", "Hand towels", "Trash full", "Cleaning needed"]
+    },
+    "preschool-bathroom": {
+      name: "Preschool Bathroom",
+      icon: "🧒",
+      items: ["Toilet paper", "Hand soap", "Hand towels", "Trash full", "Cleaning needed"]
+    },
+    "mens-foyer-supply-closet": {
+      name: "Men's Foyer Supply Closet",
+      icon: "🗄️",
+      items: ["Toilet paper", "Hand towels", "Hand soap", "Swiffer pads", "Windex", "Clorox", "Toilet bowl cleaner", "Trash bags"]
+    },
+    "education-supply-closet": {
+      name: "Education Supply Closet",
+      icon: "🗄️",
+      items: ["Toilet paper", "Hand towels", "Hand soap", "Swiffer pads", "Windex", "Clorox", "Toilet bowl cleaner", "Trash bags"]
+    },
+    "communion-prep": {
+      name: "Communion Prep Area",
+      icon: "🍞",
+      items: ["Grape juice", "Regular bread", "Gluten-free bread", "Communion cups", "Dish soap", "Trash bags"]
+    },
+    "kitchen": {
+      name: "Kitchen",
+      icon: "🍳",
+      items: ["Dish soap", "Trash bags", "Paper towels", "Paper plates", "Napkins", "Paper cups", "Plastic forks", "Spoons", "Knives", "Plastic wrap"]
+    },
+    "coffee-area": {
+      name: "Coffee Area",
+      icon: "☕",
+      items: ["Cups", "Coffee", "Decaf coffee", "Lids", "Regular creamer", "Vanilla creamer", "Sugar", "Stirrers", "Sugar-free sweetener", "Napkins", "Tea bags", "Filters"]
+    }
+  };
+
+  // ─── Config — update these before going live ─────────────────────────────────
+  const N8N_WEBHOOK_URL = "https://YOUR_N8N_WEBHOOK_URL_HERE";
+
+  // ─── Init ─────────────────────────────────────────────────────────────────────
+  const params = new URLSearchParams(window.location.search);
+  const locId  = params.get('loc') || '';
+  const loc    = LOCATIONS[locId];
+
+  if (!loc) {
+    document.getElementById('unknownScreen').classList.add('show');
+    document.getElementById('mainForm').style.display = 'none';
+  } else {
+    document.getElementById('locName').textContent = loc.name;
+    document.getElementById('locIcon').textContent = loc.icon;
+    buildItems(loc.items);
+  }
+
+  function buildItems(items) {
+    const grid = document.getElementById('itemsGrid');
+    grid.innerHTML = items.map(item => `
+      <button class="item-btn" onclick="toggleItem(this)" data-item="${item}">
+        <div class="item-check">
+          <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+            <path d="M1 5.5L5 9.5L13 1.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="item-label">${item}</span>
+      </button>
+    `).join('');
+  }
+
+  function toggleItem(btn) {
+    btn.classList.toggle('selected');
+  }
+
+  function getSelected() {
+    return [...document.querySelectorAll('.item-btn.selected')]
+      .map(btn => btn.dataset.item);
+  }
+
+  async function submitReport() {
+    const selected = getSelected();
+    const notes = document.getElementById('notesInput').value.trim();
+
+    if (selected.length === 0 && !notes) {
+      document.getElementById('errorMsg').textContent = 'Please select at least one item or add a note.';
+      document.getElementById('errorMsg').classList.add('show');
+      return;
+    }
+
+    document.getElementById('errorMsg').classList.remove('show');
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    const payload = {
+      location_id: locId,
+      location_name: loc.name,
+      items_needed: selected,
+      notes: notes || null
+    };
+
+    try {
+      await fetch(N8N_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      showSuccess(selected, notes);
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Send Report';
+      document.getElementById('errorMsg').textContent = 'Could not send report. Please try again.';
+      document.getElementById('errorMsg').classList.add('show');
+    }
+  }
+
+  function showSuccess(items, notes) {
+    document.getElementById('mainForm').classList.add('hide');
+    const screen = document.getElementById('successScreen');
+    screen.classList.add('show');
+
+    const allItems = [...items];
+    if (notes) allItems.push(notes);
+
+    document.getElementById('successSummary').innerHTML = `
+      <h3>Reported from ${loc.name}</h3>
+      <ul>${allItems.map(i => `<li>${i}</li>`).join('')}</ul>
+    `;
+  }
+</script>
+</body>
+</html>
