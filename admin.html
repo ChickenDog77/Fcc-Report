@@ -87,6 +87,30 @@
   .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
   .loading { text-align: center; padding: 60px; color: var(--gray); }
   @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Change PIN Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; padding: 24px; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: white; border-radius: 20px; padding: 36px 32px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .modal h2 { font-family: 'Lora', serif; font-size: 1.2rem; color: var(--navy); margin-bottom: 6px; }
+  .modal p { color: var(--gray); font-size: 0.82rem; margin-bottom: 24px; }
+  .modal-step { margin-bottom: 20px; }
+  .modal-step label { display: block; font-size: 0.75rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .modal-dots { display: flex; justify-content: center; gap: 10px; margin-bottom: 8px; }
+  .modal-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--border); background: white; transition: all 0.15s; }
+  .modal-dot.filled { background: var(--navy); border-color: var(--navy); }
+  .modal-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .modal-key { padding: 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 1.1rem; font-weight: 500; color: var(--navy); background: white; cursor: pointer; transition: all 0.12s; }
+  .modal-key:hover { background: var(--cream); border-color: var(--navy); }
+  .modal-key:active { transform: scale(0.95); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+  .modal-cancel { flex: 1; padding: 11px; border: 1.5px solid var(--border); border-radius: 10px; background: white; color: var(--gray); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; cursor: pointer; }
+  .modal-save { flex: 1; padding: 11px; border: none; border-radius: 10px; background: var(--navy); color: white; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+  .modal-save:disabled { opacity: 0.4; cursor: not-allowed; }
+  .modal-error { color: #c0392b; font-size: 0.8rem; min-height: 18px; margin-bottom: 8px; }
+  .modal-success { color: var(--green); font-size: 0.85rem; font-weight: 500; }
+  .change-pin-btn { background: none; border: none; color: rgba(255,255,255,0.5); font-size: 0.8rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .change-pin-btn:hover { color: white; }
 </style>
 </head>
 <body>
@@ -128,6 +152,7 @@
     </div>
     <div class="topbar-right">
       <button class="refresh-btn" onclick="loadReports()">↻ Refresh</button>
+      <button class="change-pin-btn" onclick="openChangePIN()">🔑 Change PIN</button>
       <button class="logout-btn" onclick="logout()">Lock</button>
     </div>
   </div>
@@ -153,10 +178,59 @@
   </div>
 </div>
 
+<!-- Change PIN Modal -->
+<div class="modal-overlay" id="changePinModal">
+  <div class="modal">
+    <h2>Change PIN</h2>
+    <p>Enter your current PIN, then set a new one.</p>
+    <div class="modal-step">
+      <label>Current PIN</label>
+      <div class="modal-dots" id="cpDots0">
+        <div class="modal-dot" id="cpd0-0"></div><div class="modal-dot" id="cpd0-1"></div>
+        <div class="modal-dot" id="cpd0-2"></div><div class="modal-dot" id="cpd0-3"></div>
+      </div>
+    </div>
+    <div class="modal-step">
+      <label>New PIN</label>
+      <div class="modal-dots" id="cpDots1">
+        <div class="modal-dot" id="cpd1-0"></div><div class="modal-dot" id="cpd1-1"></div>
+        <div class="modal-dot" id="cpd1-2"></div><div class="modal-dot" id="cpd1-3"></div>
+      </div>
+    </div>
+    <div class="modal-step">
+      <label>Confirm New PIN</label>
+      <div class="modal-dots" id="cpDots2">
+        <div class="modal-dot" id="cpd2-0"></div><div class="modal-dot" id="cpd2-1"></div>
+        <div class="modal-dot" id="cpd2-2"></div><div class="modal-dot" id="cpd2-3"></div>
+      </div>
+    </div>
+    <div class="modal-keypad">
+      <button class="modal-key" onclick="cpPress('1')">1</button>
+      <button class="modal-key" onclick="cpPress('2')">2</button>
+      <button class="modal-key" onclick="cpPress('3')">3</button>
+      <button class="modal-key" onclick="cpPress('4')">4</button>
+      <button class="modal-key" onclick="cpPress('5')">5</button>
+      <button class="modal-key" onclick="cpPress('6')">6</button>
+      <button class="modal-key" onclick="cpPress('7')">7</button>
+      <button class="modal-key" onclick="cpPress('8')">8</button>
+      <button class="modal-key" onclick="cpPress('9')">9</button>
+      <button class="modal-key" onclick="cpPress('0')">0</button>
+      <button class="modal-key" onclick="cpBackspace()">⌫</button>
+    </div>
+    <div class="modal-error" id="cpError"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeChangePIN()">Cancel</button>
+      <button class="modal-save" id="cpSaveBtn" onclick="saveNewPIN()" disabled>Save PIN</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  const PIN         = '1234'; // ← Change before going live
+  const DEFAULT_PIN = '1977';
   const DATA_URL    = 'https://chickendog.app.n8n.cloud/webhook/fcc-admin-data';
   const RESOLVE_URL = 'https://chickendog.app.n8n.cloud/webhook/fcc-resolve';
+
+  function getPIN() { return localStorage.getItem('fcc_pin') || DEFAULT_PIN; }
 
   let pinEntry = '';
   let allReports = [];
@@ -171,7 +245,7 @@
   function pinBackspace() { pinEntry = pinEntry.slice(0,-1); updateDots(); document.getElementById('pinError').textContent=''; }
   function updateDots() { for(let i=0;i<4;i++) document.getElementById(`dot${i}`).classList.toggle('filled', i<pinEntry.length); }
   function checkPin() {
-    if (pinEntry === PIN) {
+    if (pinEntry === getPin()) {
       document.getElementById('pinScreen').style.display = 'none';
       document.getElementById('dashboard').classList.add('show');
       loadReports();
@@ -185,6 +259,64 @@
     document.getElementById('pinError').textContent = '';
     document.getElementById('dashboard').classList.remove('show');
     document.getElementById('pinScreen').style.display = 'flex';
+  }
+
+  // Change PIN logic
+  let cpFields = ['', '', ''];
+  let cpActive = 0;
+
+  function openChangePIN() {
+    cpFields = ['', '', '']; cpActive = 0;
+    cpRefreshDots(); document.getElementById('cpError').textContent = '';
+    document.getElementById('cpSaveBtn').disabled = true;
+    document.getElementById('changePinModal').classList.add('show');
+  }
+  function closeChangePIN() { document.getElementById('changePinModal').classList.remove('show'); }
+
+  function cpPress(d) {
+    if (cpFields[cpActive].length >= 4) return;
+    cpFields[cpActive] += d;
+    cpRefreshDots();
+    if (cpFields[cpActive].length === 4) {
+      if (cpActive < 2) { cpActive++; }
+      else { cpCheckReady(); }
+    }
+  }
+  function cpBackspace() {
+    if (cpFields[cpActive].length > 0) {
+      cpFields[cpActive] = cpFields[cpActive].slice(0,-1);
+    } else if (cpActive > 0) {
+      cpActive--;
+      cpFields[cpActive] = cpFields[cpActive].slice(0,-1);
+    }
+    cpRefreshDots();
+    document.getElementById('cpError').textContent = '';
+    document.getElementById('cpSaveBtn').disabled = true;
+  }
+  function cpRefreshDots() {
+    for (let f = 0; f < 3; f++)
+      for (let i = 0; i < 4; i++)
+        document.getElementById(`cpd${f}-${i}`).classList.toggle('filled', i < cpFields[f].length);
+  }
+  function cpCheckReady() {
+    if (cpFields.every(f => f.length === 4)) document.getElementById('cpSaveBtn').disabled = false;
+  }
+  function getPin() { return localStorage.getItem('fcc_pin') || DEFAULT_PIN; }
+  function saveNewPIN() {
+    if (cpFields[0] !== getPin()) {
+      document.getElementById('cpError').textContent = 'Current PIN is incorrect.';
+      cpFields[0] = ''; cpActive = 0; cpRefreshDots();
+      document.getElementById('cpSaveBtn').disabled = true; return;
+    }
+    if (cpFields[1] !== cpFields[2]) {
+      document.getElementById('cpError').textContent = 'New PINs don\'t match. Try again.';
+      cpFields[1] = ''; cpFields[2] = ''; cpActive = 1; cpRefreshDots();
+      document.getElementById('cpSaveBtn').disabled = true; return;
+    }
+    localStorage.setItem('fcc_pin', cpFields[1]);
+    document.getElementById('cpError').style.color = 'var(--green)';
+    document.getElementById('cpError').textContent = '✓ PIN updated successfully!';
+    setTimeout(() => { closeChangePIN(); document.getElementById('cpError').style.color=''; }, 1200);
   }
 
   async function loadReports() {
