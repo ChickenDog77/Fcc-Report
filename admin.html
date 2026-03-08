@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supply Reports — FCC Admin</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #1a2744;
+    --navy-mid: #243260;
+    --gold: #c9a84c;
+    --gold-light: #f5e9c4;
+    --cream: #faf8f2;
+    --white: #ffffff;
+    --gray: #6b7280;
+    --light: #f3f4f6;
+    --border: #e8e4d9;
+    --green: #2d7a4f;
+    --green-bg: #dcf5e7;
+    --red: #c0392b;
+    --red-bg: #fef2f2;
+    --orange: #d97706;
+    --orange-bg: #fef3c7;
+  }
+
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--navy); min-height: 100vh; }
+
+  /* PIN SCREEN */
+  .pin-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 24px;
+    background: var(--navy);
+  }
+  .pin-card {
+    background: white; border-radius: 20px; padding: 40px 36px;
+    text-align: center; width: 100%; max-width: 360px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .pin-cross { width: 40px; height: 40px; position: relative; margin: 0 auto 20px; }
+  .pin-cross::before, .pin-cross::after { content: ''; position: absolute; background: var(--gold); border-radius: 3px; }
+  .pin-cross::before { width: 8px; height: 40px; left: 16px; top: 0; }
+  .pin-cross::after  { width: 40px; height: 8px; left: 0; top: 16px; }
+  .pin-card h1 { font-family: 'Lora', serif; font-size: 1.4rem; color: var(--navy); margin-bottom: 4px; }
+  .pin-card p { color: var(--gray); font-size: 0.85rem; margin-bottom: 28px; }
+  .pin-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); background: white; transition: all 0.15s; }
+  .pin-dot.filled { background: var(--navy); border-color: var(--navy); }
+  .pin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .pin-btn {
+    padding: 18px; border: 1.5px solid var(--border); border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 1.2rem; font-weight: 500;
+    color: var(--navy); background: white; cursor: pointer; transition: all 0.12s;
+  }
+  .pin-btn:hover { background: var(--cream); border-color: var(--navy); }
+  .pin-btn:active { transform: scale(0.95); }
+  .pin-btn.wide { grid-column: span 2; }
+  .pin-error { color: var(--red); font-size: 0.82rem; margin-top: 8px; min-height: 20px; }
+
+  /* DASHBOARD */
+  .dashboard { display: none; min-height: 100vh; }
+  .dashboard.show { display: block; }
+
+  .topbar {
+    background: var(--navy); border-bottom: 3px solid var(--gold);
+    padding: 16px 32px; display: flex; align-items: center; gap: 16px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-cross { width: 24px; height: 24px; position: relative; flex-shrink: 0; }
+  .topbar-cross::before, .topbar-cross::after { content: ''; position: absolute; background: var(--gold); border-radius: 2px; }
+  .topbar-cross::before { width: 5px; height: 24px; left: 9.5px; top: 0; }
+  .topbar-cross::after  { width: 24px; height: 5px; left: 0; top: 9.5px; }
+  .topbar h1 { font-family: 'Lora', serif; color: white; font-size: 1.1rem; }
+  .topbar-sub { color: var(--gold); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 300; }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .refresh-btn {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+    color: white; padding: 8px 14px; border-radius: 8px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; transition: all 0.15s;
+  }
+  .refresh-btn:hover { background: rgba(255,255,255,0.2); }
+  .logout-btn {
+    background: none; border: none; color: rgba(255,255,255,0.5);
+    font-size: 0.8rem; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  }
+  .logout-btn:hover { color: white; }
+
+  .content { max-width: 1000px; margin: 0 auto; padding: 32px 24px; }
+
+  /* STATS */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card {
+    background: white; border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 24px; text-align: center;
+  }
+  .stat-num { font-family: 'Lora', serif; font-size: 2.2rem; font-weight: 700; color: var(--navy); line-height: 1; }
+  .stat-label { font-size: 0.75rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; }
+  .stat-card.open .stat-num { color: var(--orange); }
+  .stat-card.resolved .stat-num { color: var(--green); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: white; border: 1px solid var(--border); border-radius: 10px; padding: 4px; width: fit-content; }
+  .tab {
+    padding: 8px 20px; border-radius: 7px; font-size: 0.88rem; font-weight: 500;
+    cursor: pointer; border: none; background: none; font-family: 'DM Sans', sans-serif;
+    color: var(--gray); transition: all 0.15s;
+  }
+  .tab.active { background: var(--navy); color: white; }
+
+  /* FILTERS */
+  .toolbar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+  .search-input {
+    flex: 1; min-width: 200px; padding: 9px 14px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    outline: none; background: white; transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--navy); }
+  .filter-select {
+    padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--navy);
+    background: white; outline: none; cursor: pointer;
+  }
+
+  /* REPORT CARDS */
+  .reports-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .report-card {
+    background: white; border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 24px; transition: box-shadow 0.15s;
+    animation: slideIn 0.2s ease;
+  }
+  .report-card:hover { box-shadow: 0 4px 16px rgba(26,39,68,0.08); }
+  .report-card.resolved { opacity: 0.65; }
+
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .card-location { font-family: 'Lora', serif; font-size: 1rem; font-weight: 600; color: var(--navy); }
+  .card-time { font-size: 0.75rem; color: var(--gray); white-space: nowrap; margin-top: 3px; }
+
+  .card-badge {
+    padding: 4px 10px; border-radius: 20px; font-size: 0.72rem;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
+  }
+  .badge-open { background: var(--orange-bg); color: var(--orange); }
+  .badge-resolved { background: var(--green-bg); color: var(--green); }
+
+  .card-items { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .item-tag {
+    background: var(--cream); border: 1px solid var(--border); border-radius: 6px;
+    padding: 3px 10px; font-size: 0.8rem; color: var(--navy);
+  }
+
+  .card-notes {
+    font-size: 0.85rem; color: var(--gray); font-style: italic;
+    padding: 8px 12px; background: var(--cream); border-radius: 6px;
+    margin-bottom: 10px; border-left: 3px solid var(--gold);
+  }
+
+  .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .resolved-time { font-size: 0.75rem; color: var(--green); }
+
+  .resolve-btn {
+    padding: 8px 18px; background: var(--navy); color: white; border: none;
+    border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+    font-weight: 600; cursor: pointer; transition: all 0.15s;
+  }
+  .resolve-btn:hover { background: var(--navy-mid); }
+  .resolve-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .resolve-btn.done { background: var(--green); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--gray); }
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .empty-state p { font-size: 0.95rem; }
+
+  .loading { text-align: center; padding: 60px; color: var(--gray); font-size: 0.95rem; }
+
+  @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 600px) {
+    .stats { grid-template-columns: repeat(3, 1fr); }
+    .stat-num { font-size: 1.6rem; }
+    .topbar { padding: 14px 16px; }
+    .content { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div class="pin-screen" id="pinScreen">
+  <div class="pin-card">
+    <div class="pin-cross"></div>
+    <h1>FCC Supply Reports</h1>
+    <p>Enter your PIN to access the dashboard</p>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
+    </div>
+    <div class="pin-grid">
+      <button class="pin-btn" onclick="pinPress('1')">1</button>
+      <button class="pin-btn" onclick="pinPress('2')">2</button>
+      <button class="pin-btn" onclick="pinPress('3')">3</button>
+      <button class="pin-btn" onclick="pinPress('4')">4</button>
+      <button class="pin-btn" onclick="pinPress('5')">5</button>
+      <button class="pin-btn" onclick="pinPress('6')">6</button>
+      <button class="pin-btn" onclick="pinPress('7')">7</button>
+      <button class="pin-btn" onclick="pinPress('8')">8</button>
+      <button class="pin-btn" onclick="pinPress('9')">9</button>
+      <button class="pin-btn" onclick="pinPress('0')">0</button>
+      <button class="pin-btn" onclick="pinBackspace()">⌫</button>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="topbar">
+    <div class="topbar-cross"></div>
+    <div>
+      <div class="topbar h1" style="font-family:'Lora',serif;color:white;font-size:1.1rem">Farragut Christian Church</div>
+      <div class="topbar-sub">Supply Reports Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <button class="refresh-btn" onclick="loadReports()">↻ Refresh</button>
+      <button class="logout-btn" onclick="logout()">Lock</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-num" id="statTotal">—</div>
+        <div class="stat-label">Total Reports</div>
+      </div>
+      <div class="stat-card open">
+        <div class="stat-num" id="statOpen">—</div>
+        <div class="stat-label">Open</div>
+      </div>
+      <div class="stat-card resolved">
+        <div class="stat-num" id="statResolved">—</div>
+        <div class="stat-label">Resolved</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" id="tabOpen" onclick="switchTab('open')">Open</button>
+      <button class="tab" id="tabResolved" onclick="switchTab('resolved')">Resolved</button>
+      <button class="tab" id="tabAll" onclick="switchTab('all')">All</button>
+    </div>
+
+    <div class="toolbar">
+      <input class="search-input" id="searchInput" placeholder="Search location or item..." oninput="renderReports()">
+      <select class="filter-select" id="locationFilter" onchange="renderReports()">
+        <option value="">All Locations</option>
+      </select>
+    </div>
+
+    <div id="reportsList"></div>
+  </div>
+</div>
+
+<script>
+  // ─── Config ──────────────────────────────────────────────────────────────────
+  const PIN          = '1234'; // ← Change this to your preferred PIN
+  const SUPABASE_URL = 'https://ehkfjlvufxrwtkomcqur.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoa2ZqbHZ1Znhyd3Rrb21jcXVyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjgxNjA3NiwiZXhwIjoyMDg4MzkyMDc2fQ.w_BcwVBJeuvKLkPQ_c-OzR7UeZI0BOFNYOmE0RxYyXk';
+  const RESOLVE_URL  = 'https://chickendog.app.n8n.cloud/webhook/fcc-resolve';
+
+  // ─── PIN Logic ───────────────────────────────────────────────────────────────
+  let pinEntry = '';
+
+  function pinPress(digit) {
+    if (pinEntry.length >= 4) return;
+    pinEntry += digit;
+    updateDots();
+    if (pinEntry.length === 4) setTimeout(checkPin, 150);
+  }
+
+  function pinBackspace() {
+    pinEntry = pinEntry.slice(0, -1);
+    updateDots();
+    document.getElementById('pinError').textContent = '';
+  }
+
+  function updateDots() {
+    for (let i = 0; i < 4; i++) {
+      document.getElementById(`dot${i}`).classList.toggle('filled', i < pinEntry.length);
+    }
+  }
+
+  function checkPin() {
+    if (pinEntry === PIN) {
+      document.getElementById('pinScreen').style.display = 'none';
+      document.getElementById('dashboard').classList.add('show');
+      loadReports();
+    } else {
+      document.getElementById('pinError').textContent = 'Incorrect PIN. Try again.';
+      pinEntry = '';
+      updateDots();
+    }
+  }
+
+  function logout() {
+    pinEntry = '';
+    updateDots();
+    document.getElementById('pinError').textContent = '';
+    document.getElementById('dashboard').classList.remove('show');
+    document.getElementById('pinScreen').style.display = 'flex';
+  }
+
+  // ─── Data ────────────────────────────────────────────────────────────────────
+  let allReports = [];
+  let currentTab = 'open';
+
+  async function loadReports() {
+    document.getElementById('reportsList').innerHTML = '<div class="loading">Loading reports...</div>';
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/church_reports?order=created_at.desc&limit=200`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      allReports = await res.json();
+      updateStats();
+      populateLocationFilter();
+      renderReports();
+    } catch (err) {
+      document.getElementById('reportsList').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Could not load reports. Check your connection.</p></div>';
+    }
+  }
+
+  function updateStats() {
+    const open     = allReports.filter(r => r.status === 'open').length;
+    const resolved = allReports.filter(r => r.status === 'resolved').length;
+    document.getElementById('statTotal').textContent    = allReports.length;
+    document.getElementById('statOpen').textContent     = open;
+    document.getElementById('statResolved').textContent = resolved;
+  }
+
+  function populateLocationFilter() {
+    const locs = [...new Set(allReports.map(r => r.location_name))].sort();
+    const sel = document.getElementById('locationFilter');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">All Locations</option>' + locs.map(l => `<option value="${l}"${l===cur?' selected':''}>${l}</option>`).join('');
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    ['open','resolved','all'].forEach(t => {
+      document.getElementById(`tab${t.charAt(0).toUpperCase()+t.slice(1)}`).classList.toggle('active', t === tab);
+    });
+    renderReports();
+  }
+
+  function renderReports() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const locFilter = document.getElementById('locationFilter').value;
+
+    let filtered = allReports.filter(r => {
+      if (currentTab === 'open' && r.status !== 'open') return false;
+      if (currentTab === 'resolved' && r.status !== 'resolved') return false;
+      if (locFilter && r.location_name !== locFilter) return false;
+      if (search) {
+        const haystack = (r.location_name + ' ' + (r.items_needed||[]).join(' ') + ' ' + (r.notes||'')).toLowerCase();
+        if (!haystack.includes(search)) return false;
+      }
+      return true;
+    });
+
+    const list = document.getElementById('reportsList');
+    if (!filtered.length) {
+      list.innerHTML = `<div class="empty-state"><div class="icon">${currentTab==='open'?'🎉':'📋'}</div><p>${currentTab==='open'?'No open reports — all caught up!':'No reports found.'}</p></div>`;
+      return;
+    }
+
+    list.innerHTML = '<div class="reports-list">' + filtered.map(r => reportCard(r)).join('') + '</div>';
+  }
+
+  function reportCard(r) {
+    const date = new Date(r.created_at);
+    const timeStr = date.toLocaleString('en-US', { timeZone:'America/New_York', month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true });
+    const items = (r.items_needed||[]).map(i => `<span class="item-tag">${i}</span>`).join('');
+    const notes = r.notes ? `<div class="card-notes">${r.notes}</div>` : '';
+    const badge = r.status === 'open'
+      ? `<span class="card-badge badge-open">Open</span>`
+      : `<span class="card-badge badge-resolved">✓ Resolved</span>`;
+
+    const footer = r.status === 'open'
+      ? `<button class="resolve-btn" id="btn-${r.id}" onclick="resolveReport('${r.id}')">✓ Mark Resolved</button>`
+      : `<span class="resolved-time">Resolved ${r.resolved_at ? new Date(r.resolved_at).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true}) : ''}</span>`;
+
+    return `
+      <div class="report-card ${r.status}" id="card-${r.id}">
+        <div class="card-header">
+          <div>
+            <div class="card-location">${r.location_name}</div>
+            <div class="card-time">${timeStr}</div>
+          </div>
+          ${badge}
+        </div>
+        <div class="card-items">${items}</div>
+        ${notes}
+        <div class="card-footer">
+          <span style="font-size:0.75rem;color:var(--gray)">#${r.id.slice(0,8)}</span>
+          ${footer}
+        </div>
+      </div>`;
+  }
+
+  async function resolveReport(id) {
+    const btn = document.getElementById(`btn-${id}`);
+    btn.disabled = true;
+    btn.textContent = 'Resolving...';
+    try {
+      await fetch(`${RESOLVE_URL}?id=${id}`);
+      // Update locally
+      const report = allReports.find(r => r.id === id);
+      if (report) { report.status = 'resolved'; report.resolved_at = new Date().toISOString(); }
+      updateStats();
+      renderReports();
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = '✓ Mark Resolved';
+    }
+  }
+</script>
+</body>
+</html>
