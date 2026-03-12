@@ -37,6 +37,10 @@
   .success-sub { color: var(--gray); font-size: 0.9rem; line-height: 1.6; }
   .none-needed { text-align: center; padding: 24px; color: var(--gray); font-size: 0.85rem; border: 1.5px dashed var(--border); border-radius: 10px; margin-bottom: 20px; }
   .error-msg { background: #fef2f2; color: #c0392b; padding: 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 16px; text-align: center; }
+  .location-picker { display: none; margin-top: 12px; }
+  .location-picker select { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--navy); background: white; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; background-repeat: no-repeat; background-position: right 14px center; }
+  .location-picker select:focus { border-color: var(--navy); }
+  .location-picker-label { font-size: 0.78rem; color: var(--gray); margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -49,6 +53,12 @@
   <div class="location-card">
     <div class="location-label">Reporting for</div>
     <div class="location-name" id="locationDisplay">Loading...</div>
+    <div class="location-picker" id="locationPicker">
+      <p class="location-picker-label">Select an area to report supplies needed:</p>
+      <select id="locationSelect" onchange="selectLocation(this.value)">
+        <option value="">— Choose an area —</option>
+      </select>
+    </div>
   </div>
 
   <div class="section-title">What's needed?</div>
@@ -77,34 +87,96 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const WEBHOOK = 'https://chickendog.app.n8n.cloud/webhook/fcc-report';
 
 let currentLocation = null;
+let allLocations = [];
+
+async function fetchAllLocations() {
+  const res = await fetch(`${SB_URL}/rest/v1/locations?active=eq.true&select=*&order=name`, {
+    headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+  });
+  return await res.json();
+}
+
+function showLocationPicker(locations) {
+  document.getElementById('locationDisplay').textContent = 'Supply Request';
+  const picker = document.getElementById('locationPicker');
+  const select = document.getElementById('locationSelect');
+  picker.style.display = 'block';
+  locations.forEach(loc => {
+    const opt = document.createElement('option');
+    opt.value = loc.location_id;
+    opt.textContent = loc.name;
+    select.appendChild(opt);
+  });
+  document.querySelector('.items-grid').style.display = 'none';
+  document.querySelectorAll('.section-title').forEach(el => el.style.display = 'none');
+  document.getElementById('notes').style.display = 'none';
+  document.getElementById('submitBtn').style.display = 'none';
+}
+
+function loadLocationItems(loc) {
+  currentLocation = loc;
+  document.getElementById('locationDisplay').textContent = loc.name;
+  const grid = document.getElementById('itemsGrid');
+  grid.innerHTML = '';
+  grid.style.display = '';
+  document.querySelectorAll('.section-title').forEach(el => el.style.display = '');
+  document.getElementById('notes').style.display = '';
+  document.getElementById('submitBtn').style.display = '';
+  document.getElementById('noneNeeded').style.display = 'none';
+  const items = loc.items || [];
+  if (items.length === 0) {
+    document.getElementById('noneNeeded').style.display = 'block';
+    grid.style.display = 'none';
+  } else {
+    items.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'item-btn';
+      btn.textContent = item;
+      btn.onclick = () => btn.classList.toggle('selected');
+      grid.appendChild(btn);
+    });
+  }
+}
+
+async function selectLocation(locId) {
+  if (!locId) return;
+  const loc = allLocations.find(l => l.location_id === locId);
+  if (loc) {
+    const url = new URL(window.location);
+    url.searchParams.set('loc', locId);
+    window.history.replaceState({}, '', url);
+    loadLocationItems(loc);
+  }
+}
 
 (async function init() {
   const params = new URLSearchParams(window.location.search);
   const locId = params.get('loc') || '';
 
   if (!locId) {
-    document.getElementById('locationDisplay').textContent = 'Unknown Location';
+    try {
+      allLocations = await fetchAllLocations();
+      if (allLocations.length > 0) {
+        showLocationPicker(allLocations);
+      } else {
+        document.getElementById('locationDisplay').textContent = 'No areas available';
+      }
+    } catch (err) {
+      document.getElementById('locationDisplay').textContent = 'Unable to load areas';
+    }
     return;
   }
 
   try {
     const res = await fetch(`${SB_URL}/rest/v1/locations?location_id=eq.${locId}&select=*`, {
-      headers: {
-        'apikey': SB_KEY,
-        'Authorization': `Bearer ${SB_KEY}`
-      }
+      headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
     });
-
     const data = await res.json();
-
     if (!data || data.length === 0) {
       document.getElementById('locationDisplay').textContent = 'Unknown Location';
       return;
     }
-
     const loc = data[0];
-    currentLocation = loc;
-
     if (loc.active === false) {
       document.getElementById('locationDisplay').textContent = 'This area is currently inactive. Please contact church staff.';
       document.querySelector('.items-grid').style.display = 'none';
@@ -114,23 +186,7 @@ let currentLocation = null;
       document.getElementById('submitBtn').style.display = 'none';
       return;
     }
-
-    document.getElementById('locationDisplay').textContent = loc.name;
-    const grid = document.getElementById('itemsGrid');
-    const items = loc.items || [];
-
-    if (items.length === 0) {
-      document.getElementById('noneNeeded').style.display = 'block';
-      grid.style.display = 'none';
-    } else {
-      items.forEach(item => {
-        const btn = document.createElement('button');
-        btn.className = 'item-btn';
-        btn.textContent = item;
-        btn.onclick = () => btn.classList.toggle('selected');
-        grid.appendChild(btn);
-      });
-    }
+    loadLocationItems(loc);
   } catch (err) {
     document.getElementById('locationDisplay').textContent = 'Unknown Location';
   }
