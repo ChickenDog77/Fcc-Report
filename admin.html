@@ -326,16 +326,16 @@ function renderAreasPanel(){
   html+='<button class="section-btn outline" onclick="printActiveQRs()">\uD83D\uDDA8\uFE0F Print All QR Codes</button>';
   html+='<div class="area-list">';
   allLocations.forEach(loc=>{
-    const isActive=loc.active!==false;const items=Array.isArray(loc.items)?loc.items:[];const recipients=Array.isArray(loc.recipients)?loc.recipients:[];
+    const isActive=loc.active!==false;const items=Array.isArray(loc.items)?loc.items:[];const recipients=Array.isArray(loc.email_recipients)?loc.email_recipients:[];
     const eName=loc.name.replace(/'/g,"\\'");
-    html+='<div class="area-card'+(isActive?'':' inactive')+'">'+'<div class="area-card-qr"><img src="'+qrImg(loc.id,100)+'" alt="QR" loading="lazy"></div>'+'<div class="area-card-info">'+'<div class="area-card-name">'+loc.name+'</div>'+'<div class="area-card-meta">'+'<span class="badge-sm">'+items.length+' items</span>'+'<span class="badge-sm">'+recipients.length+' recipients</span>'+'<span class="badge-sm" style="font-family:monospace;font-size:0.65rem">'+loc.id+'</span>'+'</div></div>'+'<div class="area-card-actions">'+'<label class="toggle" title="'+(isActive?'Active':'Inactive')+'">'+'<input type="checkbox"'+(isActive?' checked':'')+' onchange="toggleAreaActive(\''+loc.id+'\',this.checked)">'+'<span class="slider"></span></label>'+'<button class="btn-sm" onclick="openAreaModal(\''+loc.id+'\')">Edit</button>'+'<button class="btn-sm btn-danger" onclick="deleteArea(\''+loc.id+'\',\''+eName+'\')">Delete</button>'+'<a class="btn-sm btn-primary" href="'+qrImg(loc.id,400)+'" download="'+loc.id+'-qr.png" target="_blank">\u2B07 QR</a>'+'</div></div>';
+    html+='<div class="area-card'+(isActive?'':' inactive')+'">'+'<div class="area-card-qr"><img src="'+qrImg(loc.location_id,100)+'" alt="QR" loading="lazy"></div>'+'<div class="area-card-info">'+'<div class="area-card-name">'+loc.name+'</div>'+'<div class="area-card-meta">'+'<span class="badge-sm">'+items.length+' items</span>'+'<span class="badge-sm">'+recipients.length+' recipients</span>'+'<span class="badge-sm" style="font-family:monospace;font-size:0.65rem">'+loc.location_id+'</span>'+'</div></div>'+'<div class="area-card-actions">'+'<label class="toggle" title="'+(isActive?'Active':'Inactive')+'">'+'<input type="checkbox"'+(isActive?' checked':'')+' onchange="toggleAreaActive(\''+loc.id+'\',this.checked)">'+'<span class="slider"></span></label>'+'<button class="btn-sm" onclick="openAreaModal(\''+loc.id+'\')">Edit</button>'+'<button class="btn-sm btn-danger" onclick="deleteArea(\''+loc.id+'\',\''+eName+'\')">Delete</button>'+'<a class="btn-sm btn-primary" href="'+qrImg(loc.location_id,400)+'" download="'+loc.location_id+'-qr.png" target="_blank">\u2B07 QR</a>'+'</div></div>';
   });
   html+='</div>';html+=renderTemplateSection();panel.innerHTML=html;
 }
 function printActiveQRs(){
   const active=allLocations.filter(l=>l.active!==false);const w=window.open('','_blank');
   w.document.write('<html><head><title>QR Codes</title><style>body{font-family:sans-serif;text-align:center}.qr{display:inline-block;margin:20px;text-align:center}.qr img{width:200px;height:200px}.qr p{margin:8px 0 0;font-size:14px;font-weight:bold}</style></head><body>');
-  active.forEach(loc=>{w.document.write('<div class="qr"><img src="'+qrImg(loc.id,300)+'"><p>'+loc.name+'</p></div>');});
+  active.forEach(loc=>{w.document.write('<div class="qr"><img src="'+qrImg(loc.location_id,300)+'"><p>'+loc.name+'</p></div>');});
   w.document.write('</body></html>');w.document.close();w.print();
 }
 async function toggleAreaActive(id,active){
@@ -350,12 +350,12 @@ function openAreaModal(editId){
   const loc=editId?allLocations.find(l=>l.id===editId):null;const isNew=!loc;
   const title=isNew?'Add New Area':'Edit Area';
   const items=loc&&Array.isArray(loc.items)?loc.items.join('\n'):'';
-  const recipients=loc&&Array.isArray(loc.recipients)?loc.recipients.join('\n'):'';
+  const recipients=loc&&Array.isArray(loc.email_recipients)?loc.email_recipients.join('\n'):'';
   const isActive=loc?loc.active!==false:true;
   const tplOpts='<option value="">Custom</option>'+allTemplates.map(t=>{const c=Array.isArray(t.items)?t.items.length:0;return '<option value="'+t.id+'">'+t.name+' ('+c+' items)</option>';}).join('');
   let h='<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal-box"><h2>'+title+'</h2>';
   h+='<div class="form-group"><label>Name *</label><input type="text" id="areaName" value="'+(loc?loc.name.replace(/"/g,'&quot;'):'')+'"'+(isNew?' oninput="document.getElementById(\'areaId\').value=slugify(this.value)"':'')+'></div>';
-  h+='<div class="form-group"><label>Location ID / Slug'+(isNew?'':' (read-only)')+'</label><input type="text" id="areaId" value="'+(loc?loc.id:'')+'"'+(isNew?'':' readonly style="background:var(--cream)"')+'>'+(isNew?'<div class="hint">Auto-generated from name. You can edit it.</div>':'')+'</div>';
+  h+='<div class="form-group"><label>Location ID / Slug'+(isNew?'':' (read-only)')+'</label><input type="text" id="areaId" value="'+(loc?loc.location_id:'')+'"'+(isNew?'':' readonly style="background:var(--cream)"')+'>'+(isNew?'<div class="hint">Auto-generated from name. You can edit it.</div>':'')+'</div>';
   h+='<div class="form-group"><label>Template</label><select id="areaTpl" onchange="applyTemplate(this.value)">'+tplOpts+'</select></div>';
   h+='<div class="form-group"><label>Items (one per line)</label><textarea id="areaItems" rows="5">'+items+'</textarea></div>';
   h+='<div class="form-group"><label>Email Recipients (one per line)</label><textarea id="areaRecipients" rows="3">'+recipients+'</textarea></div>';
@@ -373,8 +373,8 @@ async function saveArea(editId){
   const items=itemsRaw?itemsRaw.split('\n').map(s=>s.trim()).filter(Boolean):[];
   const recipients=recipientsRaw?recipientsRaw.split('\n').map(s=>s.trim()).filter(Boolean):[];
   try{
-    if(editId){await sbFetch('locations?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({name,items,recipients,active})});}
-    else{const res=await fetch(SB_URL+'/rest/v1/locations',{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({id,name,items,recipients,active})});if(!res.ok){const errData=await res.json().catch(()=>null);msg.textContent=(errData&&errData.message)||'Save failed. ID may already exist.';msg.className='form-msg error';return;}}
+    if(editId){await sbFetch('locations?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({name,items,email_recipients:recipients,active})});}
+    else{const res=await fetch(SB_URL+'/rest/v1/locations',{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({location_id:id,name,items,email_recipients:recipients,active})});if(!res.ok){const errData=await res.json().catch(()=>null);msg.textContent=(errData&&errData.message)||'Save failed. ID may already exist.';msg.className='form-msg error';return;}}
     closeModal();await loadLocations();populateLocationFilter();renderAreasPanel();
   }catch(e){msg.textContent='Error: '+e.message;msg.className='form-msg error';}
 }
