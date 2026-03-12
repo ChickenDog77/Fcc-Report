@@ -87,7 +87,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--navy);
 .qr-download-btn:hover{background:var(--navy-mid)}
 .qr-print-btn{width:100%;padding:12px;background:white;border:1.5px solid var(--navy);color:var(--navy);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;margin-bottom:20px;transition:all 0.15s}
 .qr-print-btn:hover{background:var(--navy);color:white}
-.users-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.users-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px} .admin-section{background:white;border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px} .admin-section h3{font-family:'Lora',serif;font-size:1.05rem;color:var(--navy);margin-bottom:12px}
 .user-row{background:white;border:1px solid var(--border);border-radius:10px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .user-info{display:flex;flex-direction:column}
 .user-name{font-weight:600;font-size:0.95rem;color:var(--navy)}
@@ -188,7 +188,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--navy);
       <button class="tab" id="tabResolved" onclick="switchTab('resolved')">Resolved</button>
       <button class="tab" id="tabAll" onclick="switchTab('all')">All</button>
       <button class="tab" id="tabQr" onclick="switchTab('qr')">&#x1F4CD; Areas</button>
-      <button class="tab" id="tabUsers" onclick="switchTab('users')">&#x1F465; Admin Users</button>
+      <button class="tab" id="tabUsers" onclick="switchTab('users')">&#x1F465; Admin Users#x1F465; Admin</button>
     </div>
     <div class="toolbar" id="toolbar">
       <input class="search-input" id="searchInput" placeholder="Search location or item..." oninput="renderReports()">
@@ -326,11 +326,11 @@ function renderAreasPanel(){
   html+='<button class="section-btn outline" onclick="printActiveQRs()">\uD83D\uDDA8\uFE0F Print All QR Codes</button>';
   html+='<div class="area-list">';
   allLocations.forEach(loc=>{
-    const isActive=loc.active!==false;const items=Array.isArray(loc.items)?loc.items:[];const recipients=Array.isArray(loc.email_recipients)?loc.email_recipients:[];
+    const isActive=loc.active!==false;const items=Array.isArray(loc.items)?loc.items:[];
     const eName=loc.name.replace(/'/g,"\\'");
-    html+='<div class="area-card'+(isActive?'':' inactive')+'">'+'<div class="area-card-qr" style="cursor:pointer" onclick="openQRLightbox(\''+loc.location_id+'\',\''+eName+'\')" title="Click to preview"><img src="'+qrImg(loc.location_id,100)+'" alt="QR" loading="lazy"></div>'+'<div class="area-card-info">'+'<div class="area-card-name">'+loc.name+'</div>'+'<div class="area-card-meta">'+'<span class="badge-sm">'+items.length+' items</span>'+'<span class="badge-sm">'+recipients.length+' recipients</span>'+'<span class="badge-sm" style="font-family:monospace;font-size:0.65rem">'+loc.location_id+'</span>'+'</div></div>'+'<div class="area-card-actions">'+'<label class="toggle" title="'+(isActive?'Active':'Inactive')+'">'+'<input type="checkbox"'+(isActive?' checked':'')+' onchange="toggleAreaActive(\''+loc.id+'\',this.checked)">'+'<span class="slider"></span></label>'+'<button class="btn-sm" onclick="openAreaModal(\''+loc.id+'\')">Edit</button>'+'<button class="btn-sm btn-danger" onclick="deleteArea(\''+loc.id+'\',\''+eName+'\')">Delete</button>'+'<button class="btn-sm btn-primary" onclick="downloadQR(\''+loc.location_id+'\')">\u2B07 QR</button>'+'</div></div>';
+    html+='<div class="area-card'+(isActive?'':' inactive')+'">'+'<div class="area-card-qr" style="cursor:pointer" onclick="openQRLightbox(\''+loc.location_id+'\',\''+eName+'\')" title="Click to preview"><img src="'+qrImg(loc.location_id,100)+'" alt="QR" loading="lazy"></div>'+'<div class="area-card-info">'+'<div class="area-card-name">'+loc.name+'</div>'+'<div class="area-card-meta">'+'<span class="badge-sm">'+items.length+' items</span>'+'<span class="badge-sm" style="font-family:monospace;font-size:0.65rem">'+loc.location_id+'</span>'+'</div></div>'+'<div class="area-card-actions">'+'<label class="toggle" title="'+(isActive?'Active':'Inactive')+'">'+'<input type="checkbox"'+(isActive?' checked':'')+' onchange="toggleAreaActive(\''+loc.id+'\',this.checked)">'+'<span class="slider"></span></label>'+'<button class="btn-sm" onclick="openAreaModal(\''+loc.id+'\')">Edit</button>'+'<button class="btn-sm btn-danger" onclick="deleteArea(\''+loc.id+'\',\''+eName+'\')">Delete</button>'+'<button class="btn-sm btn-primary" onclick="downloadQR(\''+loc.location_id+'\')">\u2B07 QR</button>'+'</div></div>';
   });
-  html+='</div>';html+=renderTemplateSection();panel.innerHTML=html;
+  html+='</div>';panel.innerHTML=html;
 }
 function printActiveQRs(){
   const active=allLocations.filter(l=>l.active!==false);const w=window.open('','_blank');
@@ -350,7 +350,6 @@ function openAreaModal(editId){
   const loc=editId?allLocations.find(l=>l.id===editId):null;const isNew=!loc;
   const title=isNew?'Add New Area':'Edit Area';
   const items=loc&&Array.isArray(loc.items)?loc.items.join('\n'):'';
-  const recipients=loc&&Array.isArray(loc.email_recipients)?loc.email_recipients.join('\n'):'';
   const isActive=loc?loc.active!==false:true;
   const tplOpts='<option value="">Custom</option>'+allTemplates.map(t=>{const c=Array.isArray(t.items)?t.items.length:0;return '<option value="'+t.id+'">'+t.name+' ('+c+' items)</option>';}).join('');
   let h='<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal-box"><h2>'+title+'</h2>';
@@ -358,7 +357,6 @@ function openAreaModal(editId){
   h+='<div class="form-group"><label>Location ID / Slug'+(isNew?'':' (read-only)')+'</label><input type="text" id="areaId" value="'+(loc?loc.location_id:'')+'"'+(isNew?'':' readonly style="background:var(--cream)"')+'>'+(isNew?'<div class="hint">Auto-generated from name. You can edit it.</div>':'')+'</div>';
   h+='<div class="form-group"><label>Template</label><select id="areaTpl" onchange="applyTemplate(this.value)">'+tplOpts+'</select></div>';
   h+='<div class="form-group"><label>Items (one per line)</label><textarea id="areaItems" rows="5">'+items+'</textarea></div>';
-  h+='<div class="form-group"><label>Email Recipients (one per line)</label><textarea id="areaRecipients" rows="3">'+recipients+'</textarea></div>';
   h+='<div class="form-group"><div class="check-toggle"><label class="toggle"><input type="checkbox" id="areaActive"'+(isActive?' checked':'')+'><span class="slider"></span></label><span>Active</span></div></div>';
   h+='<div class="form-actions"><button class="btn-sm" onclick="closeModal()">Cancel</button><button class="btn-sm btn-primary" onclick="saveArea('+(isNew?'null':"'"+editId+"'")+')">Save</button></div>';
   h+='<div class="form-msg" id="areaMsg"></div></div></div>';
@@ -367,14 +365,13 @@ function openAreaModal(editId){
 function applyTemplate(tplId){if(!tplId)return;const tpl=allTemplates.find(t=>String(t.id)===String(tplId));if(tpl&&Array.isArray(tpl.items)){document.getElementById('areaItems').value=tpl.items.join('\n');}}
 async function saveArea(editId){
   const name=document.getElementById('areaName').value.trim();const id=document.getElementById('areaId').value.trim();
-  const itemsRaw=document.getElementById('areaItems').value.trim();const recipientsRaw=document.getElementById('areaRecipients').value.trim();
+  const itemsRaw=document.getElementById('areaItems').value.trim();
   const active=document.getElementById('areaActive').checked;const msg=document.getElementById('areaMsg');
   if(!name||!id){msg.textContent='Name and ID are required.';msg.className='form-msg error';return;}
   const items=itemsRaw?itemsRaw.split('\n').map(s=>s.trim()).filter(Boolean):[];
-  const recipients=recipientsRaw?recipientsRaw.split('\n').map(s=>s.trim()).filter(Boolean):[];
   try{
-    if(editId){await sbFetch('locations?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({name,items,email_recipients:recipients,active})});}
-    else{const res=await fetch(SB_URL+'/rest/v1/locations',{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({location_id:id,name,items,email_recipients:recipients,active})});if(!res.ok){const errData=await res.json().catch(()=>null);msg.textContent=(errData&&errData.message)||'Save failed. ID may already exist.';msg.className='form-msg error';return;}}
+    if(editId){await sbFetch('locations?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({name,items,active})});}
+    else{const res=await fetch(SB_URL+'/rest/v1/locations',{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({location_id:id,name,items,active})});if(!res.ok){const errData=await res.json().catch(()=>null);msg.textContent=(errData&&errData.message)||'Save failed. ID may already exist.';msg.className='form-msg error';return;}}
     closeModal();await loadLocations();populateLocationFilter();renderAreasPanel();
   }catch(e){msg.textContent='Error: '+e.message;msg.className='form-msg error';}
 }
@@ -416,7 +413,7 @@ function renderTemplateSection(){
   }
   html+='</div>';return html;
 }
-function toggleTemplateSection(){templatesExpanded=!templatesExpanded;renderAreasPanel();}
+function toggleTemplateSection(){templatesExpanded=!templatesExpanded;renderUsersPanel();}
 function openTemplateModal(editId){
   const tpl=editId?allTemplates.find(t=>String(t.id)===String(editId)):null;const isNew=!tpl;
   const title=isNew?'Add Template':'Edit Template';const items=tpl&&Array.isArray(tpl.items)?tpl.items.join('\n'):'';
@@ -435,19 +432,53 @@ async function saveTemplate(editId){
   try{
     if(editId){await sbFetch('item_templates?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({name,items})});}
     else{const res=await fetch(SB_URL+'/rest/v1/item_templates',{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({name,items})});if(!res.ok){msg.textContent='Save failed.';msg.className='form-msg error';return;}}
-    closeModal();await loadTemplates();templatesExpanded=true;renderAreasPanel();
+    closeModal();await loadTemplates();templatesExpanded=true;renderUsersPanel();
   }catch(e){msg.textContent='Error: '+e.message;msg.className='form-msg error';}
 }
-async function deleteTemplate(id,name){if(!confirm('Delete template "'+name+'"?'))return;await sbFetch('item_templates?id=eq.'+id,{method:'DELETE'});await loadTemplates();renderAreasPanel();}
+async function deleteTemplate(id,name){if(!confirm('Delete template "'+name+'"?'))return;await sbFetch('item_templates?id=eq.'+id,{method:'DELETE'});await loadTemplates();renderUsersPanel();}
 
 async function renderUsersPanel(){
-  const panel=document.getElementById('usersPanel');panel.innerHTML='<div class="loading">Loading users...</div>';
+  const panel=document.getElementById('usersPanel');panel.innerHTML='<div class="loading">Loading...</div>';
   try{
-    const res=await fetch(SB_URL+'/rest/v1/admin_users?select=*&order=created_at.asc',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-    const users=await res.json();
+    // Fetch admin users
+    const usersRes=await fetch(SB_URL+'/rest/v1/admin_users?select=*&order=created_at.asc',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+    const users=await usersRes.json();
+    // Fetch global email recipients
+    const settingsRes=await fetch(SB_URL+'/rest/v1/app_settings?key=eq.email_recipients&select=value',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
+    const settingsData=await settingsRes.json();
+    const emailRecipients=(settingsData&&settingsData[0]&&Array.isArray(settingsData[0].value))?settingsData[0].value:[];
+
+    let html='';
+
+    // --- Email Recipients Section ---
+    html+='<div class="admin-section"><h3>Email Recipients</h3>';
+    html+='<p style="font-size:0.82rem;color:var(--gray);margin-bottom:12px">These people receive email notifications for all supply reports.</p>';
+    html+='<textarea id="globalRecipients" rows="4" class="form-input" style="width:100%;font-size:0.9rem;margin-bottom:10px" placeholder="Enter email addresses, one per line">'+emailRecipients.join('\n')+'</textarea>';
+    html+='<div style="display:flex;gap:10px;align-items:center"><button class="add-user-btn" onclick="saveGlobalRecipients()">Save Recipients</button><span class="form-msg" id="recipientsMsg" style="margin:0"></span></div>';
+    html+='</div>';
+
+    // --- Templates Section ---
+    html+=renderTemplateSection();
+
+    // --- Admin Users Section ---
+    html+='<div class="admin-section"><h3>Admin Users</h3>';
     const rows=users.map(u=>'<div class="user-row"><div class="user-info"><span class="user-name">'+u.name+'</span><span class="user-email">'+u.email+'</span></div>'+(u.email!==currentUser.email?'<button class="user-remove-btn" data-id="'+u.id+'" data-name="'+u.name+'" onclick="removeUser(this.dataset.id,this.dataset.name)">Remove</button>':'<span style="font-size:0.75rem;color:var(--gray)">You</span>')+'</div>').join('');
-    panel.innerHTML='<div class="users-list">'+rows+'</div><div class="add-user-form"><h3>Add Admin User</h3><div class="form-row"><input class="form-input" id="newName" placeholder="Full name"><input class="form-input" id="newEmail" type="email" placeholder="email@example.com"><button class="add-user-btn" onclick="addUser()">Add</button></div><div class="form-msg" id="formMsg"></div></div>';
-  }catch(e){panel.innerHTML='<div class="empty-state"><div class="icon">\u26A0\uFE0F</div><p>Could not load users.</p></div>';}
+    html+='<div class="users-list">'+rows+'</div>';
+    html+='<div class="add-user-form"><h4 style="margin-bottom:10px">Add Admin User</h4><div class="form-row"><input class="form-input" id="newName" placeholder="Full name"><input class="form-input" id="newEmail" type="email" placeholder="email@example.com"><button class="add-user-btn" onclick="addUser()">Add</button></div><div class="form-msg" id="formMsg"></div></div>';
+    html+='</div>';
+
+    panel.innerHTML=html;
+  }catch(e){panel.innerHTML='<div class="empty-state"><div class="icon">\u26A0\uFE0F</div><p>Could not load admin settings.</p></div>';}
+}
+async function saveGlobalRecipients(){
+  const raw=document.getElementById('globalRecipients').value.trim();
+  const recipients=raw?raw.split('\n').map(s=>s.trim()).filter(Boolean):[];
+  const msg=document.getElementById('recipientsMsg');
+  try{
+    await fetch(SB_URL+'/rest/v1/app_settings?key=eq.email_recipients',{method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({value:recipients,updated_at:new Date().toISOString()})});
+    msg.textContent='\u2713 Saved!';msg.className='form-msg success';
+    setTimeout(()=>{msg.textContent='';},3000);
+  }catch(e){msg.textContent='Save failed.';msg.className='form-msg error';}
 }
 async function addUser(){
   const name=document.getElementById('newName').value.trim();const email=document.getElementById('newEmail').value.trim().toLowerCase();const msg=document.getElementById('formMsg');

@@ -88,6 +88,17 @@ const WEBHOOK = 'https://chickendog.app.n8n.cloud/webhook/fcc-report';
 
 let currentLocation = null;
 let allLocations = [];
+let globalRecipients = [];
+
+async function fetchGlobalRecipients() {
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/app_settings?key=eq.email_recipients&select=value`, {
+      headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+    });
+    const data = await res.json();
+    return (data && data[0] && Array.isArray(data[0].value)) ? data[0].value : [];
+  } catch (e) { return []; }
+}
 
 async function fetchAllLocations() {
   const res = await fetch(`${SB_URL}/rest/v1/locations?active=eq.true&select=*&order=name`, {
@@ -151,6 +162,7 @@ async function selectLocation(locId) {
 
 (async function init() {
   const params = new URLSearchParams(window.location.search);
+  globalRecipients = await fetchGlobalRecipients();
   const locId = params.get('loc') || '';
 
   if (!locId) {
@@ -219,7 +231,7 @@ async function submitReport() {
         location_name: currentLocation?.name || locId,
         items_needed: selected,
         notes: notes || null,
-        email_recipients: currentLocation?.email_recipients || null
+        email_recipients: globalRecipients.length > 0 ? globalRecipients : null
       })
     });
     document.getElementById('mainForm').style.display = 'none';
