@@ -72,45 +72,69 @@
 </div>
 
 <script>
+const SB_URL = 'https://ehkfjlvufxrwtkomcqur.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoa2ZqbHZ1Znhyd3Rrb21jcXVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MTYwNzYsImV4cCI6MjA4ODM5MjA3Nn0.RUqaQ3mQ_02ixdw-XMmesp6S2UnGmApRuFOmE0aY3CM';
 const WEBHOOK = 'https://chickendog.app.n8n.cloud/webhook/fcc-report';
 
-const LOCATIONS = {
-  'mens-bathroom-foyer':        { name: "Men's Bathroom (Foyer Side)", items: ["Toilet paper","Hand soap","Hand towels","Trash full","Cleaning needed"] },
-  'womens-bathroom-foyer':      { name: "Women's Bathroom (Foyer Side)", items: ["Toilet paper","Hand soap","Hand towels","Trash full","Cleaning needed"] },
-  'mens-bathroom-education':    { name: "Men's Bathroom (Education Side)", items: ["Toilet paper","Hand soap","Hand towels","Trash full","Cleaning needed"] },
-  'womens-bathroom-education':  { name: "Women's Bathroom (Education Side)", items: ["Toilet paper","Hand soap","Hand towels","Trash full","Cleaning needed"] },
-  'baptistry-bathroom':         { name: "Baptistry Bathroom", items: ["Toilet paper","Hand soap","Hand towels","Trash full","Cleaning needed"] },
-  'nursery-preschool-bathroom': { name: "Nursery & Preschool Bathroom", items: ["Toilet paper","Hand soap","Hand towels","Trash full","Cleaning needed"] },
-  'preschool-bathroom':         { name: "Preschool Bathroom", items: ["Toilet paper","Hand soap","Hand towels","Trash full","Cleaning needed"] },
-  'mens-foyer-supply-closet':   { name: "Men's Foyer Supply Closet", items: ["Toilet paper","Hand towels","Hand soap","Swiffer pads","Windex","Clorox","Toilet bowl cleaner","Trash bags"] },
-  'education-supply-closet':    { name: "Education Supply Closet", items: ["Toilet paper","Hand towels","Hand soap","Swiffer pads","Windex","Clorox","Toilet bowl cleaner","Trash bags"] },
-  'communion-prep':             { name: "Communion Prep Area", items: ["Grape juice","Regular bread","Gluten-free bread","Communion cups","Dish soap","Trash bags"] },
-  'kitchen':                    { name: "Kitchen", items: ["Dish soap","Trash bags","Paper towels","Paper plates","Napkins","Paper cups","Plastic forks","Spoons","Knives","Plastic wrap"] },
-  'coffee-area':                { name: "Coffee Area", items: ["Cups","Coffee","Decaf coffee","Lids","Regular creamer","Vanilla creamer","Sugar","Stirrers","Sugar-free sweetener","Napkins","Tea bags","Filters"] },
-};
+let currentLocation = null;
 
-const params = new URLSearchParams(window.location.search);
-const locId = params.get('loc') || '';
-const loc = LOCATIONS[locId];
+(async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const locId = params.get('loc') || '';
 
-if (loc) {
-  document.getElementById('locationDisplay').textContent = loc.name;
-  const grid = document.getElementById('itemsGrid');
-  if (loc.items.length === 0) {
-    document.getElementById('noneNeeded').style.display = 'block';
-    grid.style.display = 'none';
-  } else {
-    loc.items.forEach(item => {
-      const btn = document.createElement('button');
-      btn.className = 'item-btn';
-      btn.textContent = item;
-      btn.onclick = () => btn.classList.toggle('selected');
-      grid.appendChild(btn);
-    });
+  if (!locId) {
+    document.getElementById('locationDisplay').textContent = 'Unknown Location';
+    return;
   }
-} else {
-  document.getElementById('locationDisplay').textContent = 'Unknown Location';
-}
+
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/locations?location_id=eq.${locId}&select=*`, {
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': `Bearer ${SB_KEY}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (!data || data.length === 0) {
+      document.getElementById('locationDisplay').textContent = 'Unknown Location';
+      return;
+    }
+
+    const loc = data[0];
+    currentLocation = loc;
+
+    if (loc.active === false) {
+      document.getElementById('locationDisplay').textContent = 'This area is currently inactive. Please contact church staff.';
+      document.querySelector('.items-grid').style.display = 'none';
+      document.querySelector('.section-title').style.display = 'none';
+      document.querySelectorAll('.section-title')[1].style.display = 'none';
+      document.getElementById('notes').style.display = 'none';
+      document.getElementById('submitBtn').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('locationDisplay').textContent = loc.name;
+    const grid = document.getElementById('itemsGrid');
+    const items = loc.items || [];
+
+    if (items.length === 0) {
+      document.getElementById('noneNeeded').style.display = 'block';
+      grid.style.display = 'none';
+    } else {
+      items.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'item-btn';
+        btn.textContent = item;
+        btn.onclick = () => btn.classList.toggle('selected');
+        grid.appendChild(btn);
+      });
+    }
+  } catch (err) {
+    document.getElementById('locationDisplay').textContent = 'Unknown Location';
+  }
+})();
 
 async function submitReport() {
   const selected = [...document.querySelectorAll('.item-btn.selected')].map(b => b.textContent);
@@ -127,11 +151,20 @@ async function submitReport() {
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'Submitting...';
 
+  const params = new URLSearchParams(window.location.search);
+  const locId = params.get('loc') || '';
+
   try {
     await fetch(WEBHOOK, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ location_id: locId, location_name: loc?.name || locId, items_needed: selected, notes: notes || null })
+      body: JSON.stringify({
+        location_id: locId,
+        location_name: currentLocation?.name || locId,
+        items_needed: selected,
+        notes: notes || null,
+        email_recipients: currentLocation?.email_recipients || null
+      })
     });
     document.getElementById('mainForm').style.display = 'none';
     document.getElementById('successScreen').style.display = 'block';
