@@ -206,25 +206,25 @@ const MAGIC_URL='https://ehkfjlvufxrwtkomcqur.supabase.co/functions/v1/fcc-admin
 const VERIFY_URL='https://ehkfjlvufxrwtkomcqur.supabase.co/functions/v1/fcc-admin-verify-token';
 const DATA_URL='https://ehkfjlvufxrwtkomcqur.supabase.co/functions/v1/fcc-admin-data';
 const RESOLVE_URL='https://ehkfjlvufxrwtkomcqur.supabase.co/functions/v1/fcc-resolve';
-const SB_URL='https://ehkfjlvufxrwtkomcqur.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoa2ZqbHZ1Znhyd3Rrb21jcXVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MTYwNzYsImV4cCI6MjA4ODM5MjA3Nn0.RUqaQ3mQ_02ixdw-XMmesp6S2UnGmApRuFOmE0aY3CM';
+const CRUD_URL='https://ehkfjlvufxrwtkomcqur.supabase.co/functions/v1/fcc-admin-crud';
 let allReports=[],currentTab='open',currentUser=null;
 let allLocations=[],allTemplates=[];
 let templatesExpanded=false;
 function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
-async function sbFetch(path,options={}){
-  const res=await fetch(SB_URL+'/rest/v1/'+path,{...options,headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':options.method==='POST'?'return=representation':'return=minimal',...(options.headers||{})}});
-  if(options.method==='DELETE')return null;
-  return res.json();
+async function adminCrud(action,payload={}){
+  const token=localStorage.getItem('fcc_admin_token');
+  const res=await fetch(CRUD_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,token,...payload})});
+  if(res.status===401){localStorage.removeItem('fcc_admin_token');location.reload();return null;}
+  const data=await res.json();
+  if(!res.ok)throw new Error(data.error||'Operation failed');
+  return data;
 }
 async function loadLocations(){
-  const res=await fetch(SB_URL+'/rest/v1/locations?select=*&order=name',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-  allLocations=await res.json();return allLocations;
+  allLocations=await adminCrud('list-locations');return allLocations;
 }
 async function loadTemplates(){
-  const res=await fetch(SB_URL+'/rest/v1/item_templates?select=*&order=name',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-  allTemplates=await res.json();return allTemplates;
+  allTemplates=await adminCrud('list-templates');return allTemplates;
 }
 async function init(){
   const params=new URLSearchParams(window.location.search);
@@ -341,12 +341,12 @@ function printActiveQRs(){
   w.document.write('</body></html>');w.document.close();w.print();
 }
 async function toggleAreaActive(id,active){
-  await sbFetch('locations?id=eq.'+id,{method:'PATCH',body:JSON.stringify({active})});
+  await adminCrud('toggle-location-active',{id,active});
   const loc=allLocations.find(l=>l.id===id);if(loc)loc.active=active;renderAreasPanel();
 }
 async function deleteArea(id,name){
   if(!confirm('Delete area "'+name+'"? This cannot be undone.'))return;
-  await sbFetch('locations?id=eq.'+id,{method:'DELETE'});await loadLocations();renderAreasPanel();
+  await adminCrud('delete-location',{id});await loadLocations();renderAreasPanel();
 }
 function openAreaModal(editId){
   const loc=editId?allLocations.find(l=>l.id===editId):null;const isNew=!loc;
@@ -372,10 +372,9 @@ async function saveArea(editId){
   if(!name||!id){msg.textContent='Name and ID are required.';msg.className='form-msg error';return;}
   const items=itemsRaw?itemsRaw.split('\n').map(s=>s.trim()).filter(Boolean):[];
   try{
-    if(editId){await sbFetch('locations?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({name,items,active})});}
-    else{const res=await fetch(SB_URL+'/rest/v1/locations',{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({location_id:id,name,items,active})});if(!res.ok){const errData=await res.json().catch(()=>null);msg.textContent=(errData&&errData.message)||'Save failed. ID may already exist.';msg.className='form-msg error';return;}}
+    await adminCrud('save-location',{editId:editId||null,location_id:id,name,items,active});
     closeModal();await loadLocations();populateLocationFilter();renderAreasPanel();
-  }catch(e){msg.textContent='Error: '+e.message;msg.className='form-msg error';}
+  }catch(e){msg.textContent=e.message||'Save failed.';msg.className='form-msg error';}
 }
 function closeModal(){document.getElementById('modalRoot').innerHTML='';}
 function openQRLightbox(locId, locName) {
@@ -432,23 +431,18 @@ async function saveTemplate(editId){
   if(!name){msg.textContent='Name is required.';msg.className='form-msg error';return;}
   const items=itemsRaw?itemsRaw.split('\n').map(s=>s.trim()).filter(Boolean):[];
   try{
-    if(editId){await sbFetch('item_templates?id=eq.'+editId,{method:'PATCH',body:JSON.stringify({name,items})});}
-    else{const res=await fetch(SB_URL+'/rest/v1/item_templates',{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({name,items})});if(!res.ok){msg.textContent='Save failed.';msg.className='form-msg error';return;}}
+    await adminCrud('save-template',{editId:editId||null,name,items});
     closeModal();await loadTemplates();templatesExpanded=true;renderUsersPanel();
-  }catch(e){msg.textContent='Error: '+e.message;msg.className='form-msg error';}
+  }catch(e){msg.textContent=e.message||'Save failed.';msg.className='form-msg error';}
 }
-async function deleteTemplate(id,name){if(!confirm('Delete template "'+name+'"?'))return;await sbFetch('item_templates?id=eq.'+id,{method:'DELETE'});await loadTemplates();renderUsersPanel();}
+async function deleteTemplate(id,name){if(!confirm('Delete template "'+name+'"?'))return;await adminCrud('delete-template',{id});await loadTemplates();renderUsersPanel();}
 
 async function renderUsersPanel(){
   const panel=document.getElementById('usersPanel');panel.innerHTML='<div class="loading">Loading...</div>';
   try{
-    // Fetch admin users
-    const usersRes=await fetch(SB_URL+'/rest/v1/admin_users?select=*&order=created_at.asc',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-    const users=await usersRes.json();
-    // Fetch global email recipients
-    const settingsRes=await fetch(SB_URL+'/rest/v1/app_settings?key=eq.email_recipients&select=value',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});
-    const settingsData=await settingsRes.json();
-    const emailRecipients=(settingsData&&settingsData[0]&&Array.isArray(settingsData[0].value))?settingsData[0].value:[];
+    const users=await adminCrud('list-users');
+    const settingsData=await adminCrud('get-settings');
+    const emailRecipients=(settingsData&&Array.isArray(settingsData.value))?settingsData.value:[];
 
     let html='';
 
@@ -477,7 +471,7 @@ async function saveGlobalRecipients(){
   const recipients=raw?raw.split('\n').map(s=>s.trim()).filter(Boolean):[];
   const msg=document.getElementById('recipientsMsg');
   try{
-    await fetch(SB_URL+'/rest/v1/app_settings?key=eq.email_recipients',{method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({value:recipients,updated_at:new Date().toISOString()})});
+    await adminCrud('save-settings',{recipients});
     msg.textContent='\u2713 Saved!';msg.className='form-msg success';
     setTimeout(()=>{msg.textContent='';},3000);
   }catch(e){msg.textContent='Save failed.';msg.className='form-msg error';}
@@ -485,12 +479,12 @@ async function saveGlobalRecipients(){
 async function addUser(){
   const name=document.getElementById('newName').value.trim();const email=document.getElementById('newEmail').value.trim().toLowerCase();const msg=document.getElementById('formMsg');
   if(!name||!email){msg.textContent='Name and email are required.';msg.className='form-msg error';return;}
-  try{const res=await fetch(SB_URL+'/rest/v1/admin_users',{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({name,email})});if(res.ok){msg.textContent='\u2713 '+name+' added!';msg.className='form-msg success';renderUsersPanel();}else{msg.textContent='That email may already be in the list.';msg.className='form-msg error';}}
-  catch(e){msg.textContent='Something went wrong.';msg.className='form-msg error';}
+  try{await adminCrud('add-user',{name,email});msg.textContent='\u2713 '+name+' added!';msg.className='form-msg success';renderUsersPanel();}
+  catch(e){msg.textContent=e.message||'Something went wrong.';msg.className='form-msg error';}
 }
 async function removeUser(id,name){
   if(!confirm('Remove '+name+' from admin access?'))return;
-  try{await fetch(SB_URL+'/rest/v1/admin_users?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});renderUsersPanel();}catch(e){alert('Could not remove user.');}
+  try{await adminCrud('remove-user',{id});renderUsersPanel();}catch(e){alert('Could not remove user.');}
 }
 document.getElementById('emailInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendMagicLink();});
 init();
