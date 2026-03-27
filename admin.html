@@ -311,7 +311,7 @@ function reportCard(r){
   const notes=r.notes?'<div class="card-notes">'+esc(r.notes)+'</div>':'';
   const badge=r.status==='open'?'<span class="card-badge badge-open">Open</span>':'<span class="card-badge badge-resolved">\u2713 Resolved</span>';
   const footer=r.status==='open'?'<button class="resolve-btn" id="btn-'+r.id+'" data-id="'+r.id+'" onclick="resolveReport(this.dataset.id)">&#x2713; Mark Resolved</button>':'<span class="resolved-time">Resolved '+(r.resolved_at?fmt(r.resolved_at):'')+'</span>';
-  return '<div class="report-card '+r.status+'" id="card-'+r.id+'"><div class="card-header"><div><div class="card-location">'+esc(r.location_name)+'</div><div class="card-time">'+fmt(r.created_at)+'</div></div>'+badge+'</div><div class="card-items">'+items+'</div>'+notes+'<div class="card-footer"><span style="font-size:0.75rem;color:var(--gray)">#'+r.id.slice(0,8)+'</span>'+footer+'</div></div>';
+  return '<div class="report-card '+r.status+'" id="card-'+r.id+'"><div class="card-header"><div><div class="card-location">'+esc(r.location_name)+'</div><div class="card-time">'+fmt(r.created_at)+'</div></div>'+badge+'</div><div class="card-items">'+items+'</div>'+notes+'<div class="card-footer">'+footer+'</div></div>';
 }
 async function resolveReport(id){
   const btn=document.getElementById('btn-'+id);if(!btn){alert('Button error - try refreshing');return;}
