@@ -1,0 +1,9 @@
+[[redirects]]
+  from = "/:church/:room"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/:church"
+  to = "/index.html"
+  status = 200
