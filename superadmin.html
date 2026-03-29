@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Barnabas Tools — Super Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root { --navy:#1a2751; --cyan:#28c8f0; --pink:#dc648c; --purple:#a03cc8; --gray:#6b7280; --border:#e2e8f0; --cream:#f8f9fc; --green:#10b981; --red:#ef4444; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--navy); min-height:100vh; }
+.header { background:var(--navy); padding:16px 24px; display:flex; justify-content:space-between; align-items:center; }
+.header h1 { color:white; font-family:'Lora',serif; font-size:1.3rem; }
+.header span { color:var(--cyan); font-size:0.85rem; }
+.header button { background:rgba(255,255,255,0.15); color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:0.85rem; }
+.container { max-width:1100px; margin:0 auto; padding:20px; }
+
+/* Login */
+.login-wrap { max-width:400px; margin:80px auto; background:white; border-radius:16px; padding:40px; border:1px solid var(--border); text-align:center; }
+.login-wrap h2 { font-family:'Lora',serif; margin-bottom:8px; }
+.login-wrap p { color:var(--gray); font-size:0.9rem; margin-bottom:24px; }
+.login-wrap input { width:100%; padding:12px 16px; border:1.5px solid var(--border); border-radius:10px; font-size:0.95rem; outline:none; margin-bottom:12px; }
+.login-wrap input:focus { border-color:var(--navy); }
+.login-btn { width:100%; padding:14px; background:var(--navy); color:white; border:none; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; }
+.login-msg { margin-top:12px; font-size:0.85rem; }
+.login-msg.success { color:var(--green); }
+.login-msg.error { color:var(--red); }
+
+/* Tabs */
+.tabs { display:flex; gap:4px; background:white; border-radius:12px; padding:4px; margin-bottom:20px; border:1px solid var(--border); overflow-x:auto; }
+.tab { padding:10px 18px; border:none; background:none; border-radius:8px; cursor:pointer; font-size:0.9rem; font-weight:500; color:var(--gray); white-space:nowrap; }
+.tab.active { background:var(--navy); color:white; }
+
+/* Stats */
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+.stat-card { background:white; border-radius:12px; padding:20px; border:1px solid var(--border); }
+.stat-label { font-size:0.75rem; color:var(--gray); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; }
+.stat-value { font-family:'Lora',serif; font-size:1.8rem; font-weight:700; }
+.stat-sub { font-size:0.8rem; color:var(--gray); margin-top:4px; }
+
+/* Table */
+.panel { background:white; border-radius:12px; border:1px solid var(--border); overflow:hidden; }
+.panel-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.panel-header h3 { font-family:'Lora',serif; font-size:1.1rem; }
+table { width:100%; border-collapse:collapse; font-size:0.88rem; }
+th { text-align:left; padding:10px 16px; font-size:0.75rem; color:var(--gray); text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid var(--border); background:var(--cream); }
+td { padding:12px 16px; border-bottom:1px solid var(--border); }
+tr:last-child td { border-bottom:none; }
+.badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:600; }
+.badge-active { background:#d1fae5; color:#065f46; }
+.badge-inactive { background:#fee2e2; color:#991b1b; }
+.badge-open { background:#dbeafe; color:#1e40af; }
+.badge-resolved { background:#d1fae5; color:#065f46; }
+
+/* Buttons */
+.btn { padding:7px 14px; border:none; border-radius:8px; cursor:pointer; font-size:0.82rem; font-weight:500; }
+.btn-primary { background:var(--navy); color:white; }
+.btn-sm { padding:5px 10px; font-size:0.78rem; border:1px solid var(--border); background:white; border-radius:6px; cursor:pointer; }
+.btn-danger { color:var(--red); border-color:var(--red); }
+
+/* Modal */
+.modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:100; }
+.modal { background:white; border-radius:16px; padding:28px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto; }
+.modal h3 { font-family:'Lora',serif; margin-bottom:16px; }
+.form-group { margin-bottom:14px; }
+.form-group label { display:block; font-size:0.82rem; font-weight:600; margin-bottom:4px; }
+.form-group input, .form-group select { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:0.9rem; outline:none; }
+.form-group input:focus { border-color:var(--navy); }
+.form-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+.form-msg { font-size:0.82rem; margin-top:8px; }
+.form-msg.error { color:var(--red); }
+
+.loading { text-align:center; padding:40px; color:var(--gray); }
+.empty { text-align:center; padding:40px; color:var(--gray); font-size:0.9rem; }
+#dashboard { display:none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Barnabas Tools — Super Admin</h1>
+  <div>
+    <span id="userLabel"></span>
+    <button onclick="logout()" style="margin-left:12px;">Log Out</button>
+  </div>
+</div>
+
+<div id="loginScreen" class="container">
+  <div class="login-wrap">
+    <h2>Super Admin</h2>
+    <p>Enter your admin email to receive a login link.</p>
+    <input type="email" id="emailInput" placeholder="you@email.com">
+    <button class="login-btn" id="magicBtn" onclick="sendMagicLink()">Send Magic Link</button>
+    <div class="login-msg" id="loginMsg"></div>
+  </div>
+</div>
+
+<div id="dashboard" class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('dash')">Dashboard</button>
+    <button class="tab" onclick="switchTab('churches')">Churches</button>
+    <button class="tab" onclick="switchTab('reports')">Reports</button>
+    <button class="tab" onclick="switchTab('users')">Users</button>
+  </div>
+
+  <div id="tabDash">
+    <div class="stats" id="statsGrid"></div>
+  </div>
+
+  <div id="tabChurches" style="display:none">
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Churches</h3>
+        <button class="btn btn-primary" onclick="openChurchModal()">+ Add Church</button>
+      </div>
+      <div id="churchesTable"><div class="loading">Loading...</div></div>
+    </div>
+  </div>
+
+  <div id="tabReports" style="display:none">
+    <div class="panel">
+      <div class="panel-header">
+        <h3>All Reports</h3>
+        <select id="reportFilter" onchange="renderReports()" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;">
+          <option value="">All Churches</option>
+        </select>
+      </div>
+      <div id="reportsTable"><div class="loading">Loading...</div></div>
+    </div>
+  </div>
+
+  <div id="tabUsers" style="display:none">
+    <div class="panel">
+      <div class="panel-header"><h3>All Admin Users</h3></div>
+      <div id="usersTable"><div class="loading">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+const MAGIC_URL='https://ehkfjlvufxrwtkomcqur.supabase.co/functions/v1/fcc-admin-magic-link';
+const VERIFY_URL='https://ehkfjlvufxrwtkomcqur.supabase.co/functions/v1/fcc-admin-verify-token';
+const SA_URL='https://ehkfjlvufxrwtkomcqur.supabase.co/functions/v1/fcc-superadmin';
+
+let allChurches=[], allReports=[], allUsers=[];
+
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+async function saFetch(action, payload={}) {
+  const token=localStorage.getItem('sa_token');
+  const res=await fetch(SA_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,token,...payload})});
+  if(res.status===401){logout();throw new Error('Session expired');}
+  const data=await res.json();
+  if(data.error) throw new Error(data.error);
+  return data;
+}
+
+// Auth
+async function sendMagicLink(){
+  const email=document.getElementById('emailInput').value.trim();
+  const msg=document.getElementById('loginMsg');const btn=document.getElementById('magicBtn');
+  if(!email){msg.textContent='Please enter your email.';msg.className='login-msg error';return;}
+  btn.disabled=true;btn.textContent='Sending...';msg.textContent='';
+  try{
+    const res=await fetch(MAGIC_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    if(res.ok){msg.textContent='\u2713 Magic link sent! Check your email.';msg.className='login-msg success';btn.textContent='Link Sent';}
+    else{msg.textContent="Not authorized for super admin.";msg.className='login-msg error';btn.disabled=false;btn.textContent='Send Magic Link';}
+  }catch(e){msg.textContent='Something went wrong.';msg.className='login-msg error';btn.disabled=false;btn.textContent='Send Magic Link';}
+}
+
+async function verifyToken(token){
+  try{
+    const res=await fetch(VERIFY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})});
+    const data=await res.json();
+    if(data.valid){
+      // Verify super admin access
+      const saRes=await fetch(SA_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'dashboard-stats',token})});
+      if(saRes.status===401) return null;
+      return data;
+    }
+  }catch(e){}
+  return null;
+}
+
+async function initAuth(){
+  const params=new URLSearchParams(window.location.search);
+  const urlToken=params.get('token');
+  if(urlToken){
+    const user=await verifyToken(urlToken);
+    if(user){
+      localStorage.setItem('sa_token',urlToken);
+      window.history.replaceState({},'','/superadmin');
+      showDashboard(user);return;
+    }
+  }
+  const saved=localStorage.getItem('sa_token');
+  if(saved){
+    const user=await verifyToken(saved);
+    if(user){showDashboard(user);return;}
+    localStorage.removeItem('sa_token');
+  }
+  document.getElementById('loginScreen').style.display='';
+}
+
+function showDashboard(user){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('dashboard').style.display='';
+  document.getElementById('userLabel').textContent=user.name||user.email;
+  loadAll();
+}
+
+function logout(){
+  localStorage.removeItem('sa_token');
+  location.reload();
+}
+
+// Tabs
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['dash','churches','reports','users'][i]===name));
+  ['Dash','Churches','Reports','Users'].forEach(n=>document.getElementById('tab'+n).style.display='none');
+  document.getElementById('tab'+name.charAt(0).toUpperCase()+name.slice(1)).style.display='';
+}
+
+// Data
+async function loadAll(){
+  try{
+    const [stats,churches,reports,users]=await Promise.all([
+      saFetch('dashboard-stats'),saFetch('list-churches'),saFetch('list-all-reports'),saFetch('list-all-users')
+    ]);
+    renderStats(stats);
+    allChurches=churches;renderChurches();
+    allReports=reports;populateReportFilter();renderReports();
+    allUsers=users;renderUsers();
+  }catch(e){console.error(e);}
+}
+
+function renderStats(s){
+  document.getElementById('statsGrid').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Churches</div><div class="stat-value">${s.churches.total}</div><div class="stat-sub">${s.churches.active} active</div></div>
+    <div class="stat-card"><div class="stat-label">Reports</div><div class="stat-value">${s.reports.total}</div><div class="stat-sub">${s.reports.open} open</div></div>
+    <div class="stat-card"><div class="stat-label">Admin Users</div><div class="stat-value">${s.users}</div></div>`;
+}
+
+function renderChurches(){
+  if(!allChurches.length){document.getElementById('churchesTable').innerHTML='<div class="empty">No churches yet.</div>';return;}
+  let h='<table><thead><tr><th>Name</th><th>Slug</th><th>Status</th><th>Locations</th><th>Reports</th><th>Users</th><th>Actions</th></tr></thead><tbody>';
+  allChurches.forEach(c=>{
+    const badge=c.status==='active'?'badge-active':'badge-inactive';
+    h+=`<tr><td><strong>${esc(c.name)}</strong></td><td><code>${esc(c.slug)}</code></td>
+      <td><span class="badge ${badge}">${c.status}</span></td>
+      <td>${c.location_count}</td><td>${c.report_count}</td><td>${c.user_count}</td>
+      <td><button class="btn-sm" onclick="openChurchModal('${c.id}')">Edit</button>
+      <button class="btn-sm" onclick="toggleChurch('${c.id}','${c.status==='active'?'inactive':'active'}')">${c.status==='active'?'Deactivate':'Activate'}</button></td></tr>`;
+  });
+  h+='</tbody></table>';
+  document.getElementById('churchesTable').innerHTML=h;
+}
+
+function populateReportFilter(){
+  const sel=document.getElementById('reportFilter');
+  const existing=sel.value;
+  sel.innerHTML='<option value="">All Churches</option>';
+  const churches=[...new Set(allReports.map(r=>(r.churches as any)?.name).filter(Boolean))];
+  churches.sort().forEach(n=>sel.innerHTML+=`<option value="${esc(n)}">${esc(n)}</option>`);
+  sel.value=existing;
+}
+
+function renderReports(){
+  const filter=document.getElementById('reportFilter').value;
+  let filtered=allReports;
+  if(filter) filtered=allReports.filter(r=>r.churches?.name===filter);
+  if(!filtered.length){document.getElementById('reportsTable').innerHTML='<div class="empty">No reports.</div>';return;}
+  let h='<table><thead><tr><th>Church</th><th>Location</th><th>Items</th><th>Status</th><th>Date</th></tr></thead><tbody>';
+  filtered.forEach(r=>{
+    const badge=r.status==='open'?'badge-open':'badge-resolved';
+    const date=new Date(r.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+    const items=(r.items_needed||[]).join(', ');
+    h+=`<tr><td>${esc(r.churches?.name||'—')}</td><td>${esc(r.location_name)}</td>
+      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(items)}">${esc(items)}</td>
+      <td><span class="badge ${badge}">${r.status}</span></td><td>${date}</td></tr>`;
+  });
+  h+='</tbody></table>';
+  document.getElementById('reportsTable').innerHTML=h;
+}
+
+function renderUsers(){
+  if(!allUsers.length){document.getElementById('usersTable').innerHTML='<div class="empty">No users.</div>';return;}
+  let h='<table><thead><tr><th>Name</th><th>Email</th><th>Church</th><th>Super Admin</th></tr></thead><tbody>';
+  allUsers.forEach(u=>{
+    h+=`<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td>
+      <td>${esc(u.churches?.name||'—')}</td>
+      <td>${u.is_super_admin?'<span class="badge badge-active">Yes</span>':''}</td></tr>`;
+  });
+  h+='</tbody></table>';
+  document.getElementById('usersTable').innerHTML=h;
+}
+
+// Church modal
+function openChurchModal(editId){
+  const church=editId?allChurches.find(c=>c.id===editId):null;
+  const isNew=!church;
+  let h=`<div class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+    <h3>${isNew?'Add Church':'Edit Church'}</h3>
+    <div class="form-group"><label>Church Name</label><input type="text" id="churchName" value="${church?esc(church.name):''}"></div>
+    <div class="form-group"><label>Slug (URL identifier)</label><input type="text" id="churchSlug" value="${church?esc(church.slug):''}" ${isNew?'':'readonly style="background:var(--cream)"'}></div>
+    <div id="churchMsg" class="form-msg"></div>
+    <div class="form-actions">
+      <button class="btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveChurch(${isNew?'null':"'"+editId+"'"})">Save</button>
+    </div></div></div>`;
+  document.getElementById('modalRoot').innerHTML=h;
+  if(isNew){
+    document.getElementById('churchName').addEventListener('input',function(){
+      document.getElementById('churchSlug').value=this.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    });
+  }
+}
+
+async function saveChurch(editId){
+  const name=document.getElementById('churchName').value.trim();
+  const slug=document.getElementById('churchSlug').value.trim();
+  const msg=document.getElementById('churchMsg');
+  if(!name||!slug){msg.textContent='Name and slug are required.';msg.className='form-msg error';return;}
+  try{
+    if(editId) await saFetch('edit-church',{id:editId,name,slug});
+    else await saFetch('add-church',{name,slug});
+    closeModal();
+    const churches=await saFetch('list-churches');allChurches=churches;renderChurches();
+  }catch(e){msg.textContent=e.message||'Save failed.';msg.className='form-msg error';}
+}
+
+async function toggleChurch(id,status){
+  try{await saFetch('toggle-church',{id,status});
+    const churches=await saFetch('list-churches');allChurches=churches;renderChurches();
+  }catch(e){alert(e.message);}
+}
+
+function closeModal(){document.getElementById('modalRoot').innerHTML='';}
+
+// Auto-gen slug from name input
+document.getElementById('churchName')?.addEventListener('input',function(){
+  const slugEl=document.getElementById('churchSlug');
+  if(slugEl&&!slugEl.readOnly) slugEl.value=this.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+});
+
+// Init
+initAuth();
+</script>
+</body>
+</html>

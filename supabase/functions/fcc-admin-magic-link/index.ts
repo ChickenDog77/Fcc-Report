@@ -64,8 +64,11 @@ Deno.serve(async (req: Request) => {
     if (sessErr) throw sessErr;
 
     const churchSlug = (user.churches as any)?.slug || 'admin';
-    const magicLink = `https://supplies.barnabastools.com/${churchSlug}/admin?token=${session.token}`;
-    const churchName = (user.churches as any)?.name || 'Your Church';
+    const isSuperAdmin = user.is_super_admin === true;
+    const magicLink = isSuperAdmin
+      ? `https://supplies.barnabastools.com/superadmin?token=${session.token}`
+      : `https://supplies.barnabastools.com/${churchSlug}/admin?token=${session.token}`;
+    const churchName = isSuperAdmin ? 'Barnabas Tools' : ((user.churches as any)?.name || 'Your Church');
 
     const emailRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
