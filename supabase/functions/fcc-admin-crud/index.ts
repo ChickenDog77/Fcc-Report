@@ -33,6 +33,8 @@ async function listLocations(sb: SB, church_id: string) {
   return data || [];
 }
 
+const RESERVED_SLUGS = ['admin', 'superadmin', 'login', 'logout', 'settings', 'billing', 'signup', 'help', 'support'];
+
 async function saveLocation(sb: SB, church_id: string, payload: any) {
   const { editId, location_id, name, items, active } = payload;
   if (!name || typeof name !== 'string') throw new Error('Name is required');
@@ -43,6 +45,7 @@ async function saveLocation(sb: SB, church_id: string, payload: any) {
   } else {
     if (!location_id || typeof location_id !== 'string') throw new Error('Location ID is required');
     const cleanId = location_id.replace(/[^a-zA-Z0-9-]/g, '').substring(0, 100);
+    if (RESERVED_SLUGS.includes(cleanId.toLowerCase())) throw new Error(`"${cleanId}" is a reserved word and cannot be used as a room ID.`);
     const { data, error } = await sb.from('locations').insert({ church_id, location_id: cleanId, name, items: items || [], active: active !== false }).select().single();
     if (error) throw error;
     return data;

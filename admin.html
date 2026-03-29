@@ -369,7 +369,9 @@ async function saveArea(editId){
   const name=document.getElementById('areaName').value.trim();const id=document.getElementById('areaId').value.trim();
   const itemsRaw=document.getElementById('areaItems').value.trim();
   const active=document.getElementById('areaActive').checked;const msg=document.getElementById('areaMsg');
+  const RESERVED=['admin','superadmin','login','logout','settings','billing','signup','help','support'];
   if(!name||!id){msg.textContent='Name and ID are required.';msg.className='form-msg error';return;}
+  if(!editId&&RESERVED.includes(id.toLowerCase())){msg.textContent='"'+id+'" is a reserved word and cannot be used as a room ID.';msg.className='form-msg error';return;}
   const items=itemsRaw?itemsRaw.split('\n').map(s=>s.trim()).filter(Boolean):[];
   try{
     await adminCrud('save-location',{editId:editId||null,location_id:id,name,items,active});

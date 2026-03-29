@@ -57,7 +57,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: church, error: churchErr } = await sb
       .from('churches')
-      .select('id, name')
+      .select('id, name, slug')
       .eq('slug', cleanSlug)
       .eq('status', 'active')
       .single();
@@ -125,7 +125,7 @@ Deno.serve(async (req: Request) => {
             <a href="${resolveUrl}" style="background:#1a2751;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">Mark as Resolved</a>
           </p>
           <p style="text-align:center;margin-top:20px;">
-            <a href="https://supplies.barnabastools.com/admin.html" style="color:#28c8f0;font-size:13px;">Open Admin Dashboard</a>
+            <a href="https://supplies.barnabastools.com/${church.slug}/admin" style="color:#28c8f0;font-size:13px;">Open Admin Dashboard</a>
           </p>
         </div>
       </div>`;

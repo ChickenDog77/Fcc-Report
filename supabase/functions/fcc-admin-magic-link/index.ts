@@ -63,7 +63,8 @@ Deno.serve(async (req: Request) => {
 
     if (sessErr) throw sessErr;
 
-    const magicLink = `https://supplies.barnabastools.com/admin.html?token=${session.token}`;
+    const churchSlug = (user.churches as any)?.slug || 'admin';
+    const magicLink = `https://supplies.barnabastools.com/${churchSlug}/admin?token=${session.token}`;
     const churchName = (user.churches as any)?.name || 'Your Church';
 
     const emailRes = await fetch('https://api.resend.com/emails', {
