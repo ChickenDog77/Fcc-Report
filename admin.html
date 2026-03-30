@@ -226,7 +226,9 @@ async function loadLocations(){
 async function loadTemplates(){
   allTemplates=await adminCrud('list-templates');return allTemplates;
 }
+const IS_DEMO=window.location.pathname.split('/').filter(Boolean)[0]==='demo';
 async function init(){
+  if(IS_DEMO){localStorage.setItem('fcc_admin_token','demo-token-permanent');}
   const params=new URLSearchParams(window.location.search);
   const urlToken=params.get('token');
   if(urlToken){localStorage.setItem('fcc_admin_token',urlToken);window.history.replaceState({},'',window.location.pathname);}
@@ -245,6 +247,13 @@ function showDashboard(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('dashboard').style.display='block';
   document.getElementById('userBadge').textContent=currentUser.name||currentUser.email;
+  if(IS_DEMO){
+    const b=document.createElement('div');
+    b.style.cssText='background:#0891b2;color:white;text-align:center;padding:10px 16px;font-size:0.9rem;font-family:"DM Sans",sans-serif;';
+    b.innerHTML='This is a demo dashboard. Data resets every 6 hours. <a href="https://barnabastools.com#contact" style="color:white;font-weight:700;text-decoration:underline;margin-left:8px;">Sign up for free</a>';
+    document.getElementById('dashboard').prepend(b);
+    const lo=document.querySelector('.logout-btn');if(lo)lo.style.display='none';
+  }
   loadLocations().then(()=>loadTemplates()).then(()=>loadReports());
 }
 async function sendMagicLink(){
@@ -369,7 +378,7 @@ async function saveArea(editId){
   const name=document.getElementById('areaName').value.trim();const id=document.getElementById('areaId').value.trim();
   const itemsRaw=document.getElementById('areaItems').value.trim();
   const active=document.getElementById('areaActive').checked;const msg=document.getElementById('areaMsg');
-  const RESERVED=['admin','superadmin','login','logout','settings','billing','signup','help','support'];
+  const RESERVED=['admin','superadmin','login','logout','settings','billing','signup','help','support','demo'];
   if(!name||!id){msg.textContent='Name and ID are required.';msg.className='form-msg error';return;}
   if(!editId&&RESERVED.includes(id.toLowerCase())){msg.textContent='"'+id+'" is a reserved word and cannot be used as a room ID.';msg.className='form-msg error';return;}
   const items=itemsRaw?itemsRaw.split('\n').map(s=>s.trim()).filter(Boolean):[];

@@ -80,6 +80,11 @@ Deno.serve(async (req: Request) => {
 
     if (insertErr) throw insertErr;
 
+    // Skip email for demo church
+    if (church.slug === 'demo') {
+      return new Response(JSON.stringify({ success: true, report }), { headers: jsonHeaders });
+    }
+
     // Get recipients
     const { data: settings } = await sb
       .from('app_settings')

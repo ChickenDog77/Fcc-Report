@@ -33,7 +33,7 @@ async function listLocations(sb: SB, church_id: string) {
   return data || [];
 }
 
-const RESERVED_SLUGS = ['admin', 'superadmin', 'login', 'logout', 'settings', 'billing', 'signup', 'help', 'support'];
+const RESERVED_SLUGS = ['admin', 'superadmin', 'login', 'logout', 'settings', 'billing', 'signup', 'help', 'support', 'demo'];
 
 async function saveLocation(sb: SB, church_id: string, payload: any) {
   const { editId, location_id, name, items, active } = payload;
