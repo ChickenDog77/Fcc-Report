@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up — Barnabas Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:#0f1729;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:white;border-radius:20px;padding:40px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.logo{text-align:center;margin-bottom:28px}
+.logo h1{font-family:'Lora',serif;color:#1a2751;font-size:1.6rem;margin-bottom:4px}
+.logo p{color:#6b7280;font-size:0.9rem}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;color:#1a2751;font-weight:600;font-size:0.85rem;margin-bottom:6px}
+.form-group input{width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:10px;font-size:1rem;font-family:'DM Sans',sans-serif;transition:border-color 0.2s}
+.form-group input:focus{outline:none;border-color:#28c8f0}
+.submit-btn{width:100%;padding:14px;background:#1a2751;color:white;border:none;border-radius:10px;font-size:1rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:8px;transition:background 0.2s}
+.submit-btn:hover{background:#243366}
+.submit-btn:disabled{opacity:0.6;cursor:not-allowed}
+.msg{text-align:center;margin-top:16px;font-size:0.9rem;min-height:20px}
+.msg.error{color:#dc2626}
+.msg.success{color:#059669}
+.links{text-align:center;margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0}
+.links a{color:#28c8f0;text-decoration:none;font-size:0.85rem;font-weight:500}
+.links a:hover{text-decoration:underline}
+.links .sep{color:#d1d5db;margin:0 8px}
+.success-state{display:none;text-align:center;padding:20px 0}
+.success-state .check{font-size:3rem;margin-bottom:16px}
+.success-state h2{color:#1a2751;font-family:'Lora',serif;font-size:1.3rem;margin-bottom:8px}
+.success-state p{color:#6b7280;font-size:0.95rem;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="card">
+  <div id="formState">
+    <div class="logo">
+      <h1>Barnabas Tools</h1>
+      <p>Free supply reporting for your church</p>
+    </div>
+    <form id="signupForm" onsubmit="handleSignup(event)">
+      <div class="form-group">
+        <label for="churchName">Church Name</label>
+        <input type="text" id="churchName" placeholder="e.g. First Baptist Church" required minlength="2" maxlength="100">
+      </div>
+      <div class="form-group">
+        <label for="adminName">Your Name</label>
+        <input type="text" id="adminName" placeholder="e.g. Jane Smith" required minlength="2" maxlength="100">
+      </div>
+      <div class="form-group">
+        <label for="adminEmail">Email Address</label>
+        <input type="email" id="adminEmail" placeholder="you@example.com" required>
+      </div>
+      <button type="submit" class="submit-btn" id="submitBtn">Get Started Free</button>
+      <div class="msg" id="msg"></div>
+    </form>
+    <div class="links">
+      <a href="https://barnabastools.com">Home</a>
+      <span class="sep">|</span>
+      <a href="/demo/admin">Try the Demo</a>
+      <span class="sep">|</span>
+      <a href="#" onclick="showLogin(event)">Already have an account?</a>
+    </div>
+  </div>
+  <div id="successState" class="success-state">
+    <div class="check">&#10003;</div>
+    <h2>Check your email!</h2>
+    <p>We sent a link to <strong id="sentEmail"></strong> to set up your dashboard.</p>
+    <div class="links" style="margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0">
+      <a href="https://barnabastools.com">Back to Home</a>
+      <span class="sep">|</span>
+      <a href="/demo/admin">Try the Demo</a>
+    </div>
+  </div>
+  <div id="loginState" style="display:none">
+    <div class="logo">
+      <h1>Barnabas Tools</h1>
+      <p>Send a login link to your email</p>
+    </div>
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="loginEmail">Email Address</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" required>
+      </div>
+      <button type="submit" class="submit-btn" id="loginBtn">Send Login Link</button>
+      <div class="msg" id="loginMsg"></div>
+    </form>
+    <div class="links">
+      <a href="#" onclick="showSignup(event)">Create a new account</a>
+      <span class="sep">|</span>
+      <a href="https://barnabastools.com">Home</a>
+    </div>
+  </div>
+  <div id="loginSuccessState" style="display:none;text-align:center;padding:20px 0">
+    <div class="check" style="font-size:3rem;margin-bottom:16px">&#10003;</div>
+    <h2 style="color:#1a2751;font-family:'Lora',serif;font-size:1.3rem;margin-bottom:8px">Check your email!</h2>
+    <p style="color:#6b7280;font-size:0.95rem;line-height:1.5">If that email is registered, we sent a login link to <strong id="loginSentEmail"></strong>.</p>
+    <div class="links" style="margin-top:24px;padding-top:20px;border-top:1px solid #e2e8f0">
+      <a href="https://barnabastools.com">Back to Home</a>
+    </div>
+  </div>
+</div>
+<script>
+const SIGNUP_URL='https://ehkfjlvufxrwtkomcqur.supabase.co/functions/v1/fcc-signup';
+const MAGIC_URL='https://ehkfjlvufxrwtkomcqur.supabase.co/functions/v1/fcc-admin-magic-link';
+
+async function handleSignup(e){
+  e.preventDefault();
+  const btn=document.getElementById('submitBtn');
+  const msg=document.getElementById('msg');
+  btn.disabled=true;btn.textContent='Creating account...';msg.textContent='';msg.className='msg';
+  try{
+    const res=await fetch(SIGNUP_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      church_name:document.getElementById('churchName').value,
+      admin_name:document.getElementById('adminName').value,
+      admin_email:document.getElementById('adminEmail').value
+    })});
+    const data=await res.json();
+    if(res.ok&&data.success){
+      document.getElementById('sentEmail').textContent=document.getElementById('adminEmail').value;
+      document.getElementById('formState').style.display='none';
+      document.getElementById('successState').style.display='block';
+    }else{
+      msg.textContent=data.error||'Something went wrong.';msg.className='msg error';
+      btn.disabled=false;btn.textContent='Get Started Free';
+    }
+  }catch(err){
+    msg.textContent='Network error. Please try again.';msg.className='msg error';
+    btn.disabled=false;btn.textContent='Get Started Free';
+  }
+}
+
+async function handleLogin(e){
+  e.preventDefault();
+  const btn=document.getElementById('loginBtn');
+  const msg=document.getElementById('loginMsg');
+  btn.disabled=true;btn.textContent='Sending...';msg.textContent='';msg.className='msg';
+  try{
+    const email=document.getElementById('loginEmail').value;
+    const res=await fetch(MAGIC_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    if(res.ok){
+      document.getElementById('loginSentEmail').textContent=email;
+      document.getElementById('loginState').style.display='none';
+      document.getElementById('loginSuccessState').style.display='block';
+    }else{
+      msg.textContent='Something went wrong. Try again.';msg.className='msg error';
+      btn.disabled=false;btn.textContent='Send Login Link';
+    }
+  }catch(err){
+    msg.textContent='Network error. Please try again.';msg.className='msg error';
+    btn.disabled=false;btn.textContent='Send Login Link';
+  }
+}
+
+function showLogin(e){e.preventDefault();document.getElementById('formState').style.display='none';document.getElementById('loginState').style.display='block';}
+function showSignup(e){e.preventDefault();document.getElementById('loginState').style.display='none';document.getElementById('formState').style.display='block';}
+</script>
+</body>
+</html>

@@ -157,7 +157,7 @@ async function selectLocation(locId) {
   churchSlug = slug;
 
   if (!slug) {
-    document.getElementById('locationDisplay').textContent = 'Invalid URL';
+    window.location.href = 'https://barnabastools.com';
     return;
   }
 
