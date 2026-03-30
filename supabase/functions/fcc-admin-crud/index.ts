@@ -68,30 +68,30 @@ async function deleteLocation(sb: SB, church_id: string, payload: any) {
   return { success: true };
 }
 
-async function listTemplates(sb: SB) {
-  const { data, error } = await sb.from('item_templates').select('*').order('name');
+async function listTemplates(sb: SB, church_id: string) {
+  const { data, error } = await sb.from('item_templates').select('*').eq('church_id', church_id).order('name');
   if (error) throw error;
   return data || [];
 }
 
-async function saveTemplate(sb: SB, payload: any) {
+async function saveTemplate(sb: SB, church_id: string, payload: any) {
   const { editId, name, items } = payload;
   if (!name || typeof name !== 'string') throw new Error('Name is required');
   if (editId) {
-    const { error } = await sb.from('item_templates').update({ name, items: items || [] }).eq('id', editId);
+    const { error } = await sb.from('item_templates').update({ name, items: items || [] }).eq('id', editId).eq('church_id', church_id);
     if (error) throw error;
     return { success: true };
   } else {
-    const { data, error } = await sb.from('item_templates').insert({ name, items: items || [] }).select().single();
+    const { data, error } = await sb.from('item_templates').insert({ church_id, name, items: items || [] }).select().single();
     if (error) throw error;
     return data;
   }
 }
 
-async function deleteTemplate(sb: SB, payload: any) {
+async function deleteTemplate(sb: SB, church_id: string, payload: any) {
   const { id } = payload;
   if (!id) throw new Error('ID is required');
-  const { error } = await sb.from('item_templates').delete().eq('id', id);
+  const { error } = await sb.from('item_templates').delete().eq('id', id).eq('church_id', church_id);
   if (error) throw error;
   return { success: true };
 }
@@ -169,9 +169,9 @@ Deno.serve(async (req: Request) => {
       case 'save-location': result = await saveLocation(sb, church_id, payload); break;
       case 'toggle-location-active': result = await toggleLocationActive(sb, church_id, payload); break;
       case 'delete-location': result = await deleteLocation(sb, church_id, payload); break;
-      case 'list-templates': result = await listTemplates(sb); break;
-      case 'save-template': result = await saveTemplate(sb, payload); break;
-      case 'delete-template': result = await deleteTemplate(sb, payload); break;
+      case 'list-templates': result = await listTemplates(sb, church_id); break;
+      case 'save-template': result = await saveTemplate(sb, church_id, payload); break;
+      case 'delete-template': result = await deleteTemplate(sb, church_id, payload); break;
       case 'list-users': result = await listUsers(sb, church_id); break;
       case 'add-user': result = await addUser(sb, church_id, payload); break;
       case 'remove-user': result = await removeUser(sb, church_id, payload); break;
