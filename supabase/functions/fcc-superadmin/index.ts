@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const ALLOWED_ORIGINS = ['https://supplies.barnabastools.com', 'https://supplies.farragutcc.com'];
+const ALLOWED_ORIGINS = ['https://admin.barnabastools.com', 'https://supplies.barnabastools.com'];
 
 function corsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';

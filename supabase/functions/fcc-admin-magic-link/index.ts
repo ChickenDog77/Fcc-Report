@@ -1,7 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const ALLOWED_ORIGINS = ['https://supplies.barnabastools.com', 'https://supplies.farragutcc.com'];
+const ALLOWED_ORIGINS = ['https://supplies.barnabastools.com', 'https://admin.barnabastools.com', 'https://supplies.farragutcc.com'];
 
 function corsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';
@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
     const churchSlug = (user.churches as any)?.slug || 'admin';
     const isSuperAdmin = user.is_super_admin === true;
     const magicLink = isSuperAdmin
-      ? `https://supplies.barnabastools.com/superadmin?token=${session.token}`
+      ? `https://admin.barnabastools.com?token=${session.token}`
       : `https://supplies.barnabastools.com/${churchSlug}/admin?token=${session.token}`;
     const churchName = isSuperAdmin ? 'Barnabas Tools' : ((user.churches as any)?.name || 'Your Church');
 

@@ -1,9 +1,4 @@
 [[redirects]]
-  from = "/superadmin"
-  to = "/superadmin.html"
-  status = 200
-
-[[redirects]]
   from = "/:church/admin"
   to = "/admin.html"
   status = 200
